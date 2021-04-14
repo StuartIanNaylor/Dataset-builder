@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 import glob
 import os
+import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-r', '--samplerate', type=int, default=16000, help='sampling rate')
@@ -26,21 +27,53 @@ stat = sox.file_info.stat(silence)
 silence = stat['Mean    norm']
 print(stat)
 
-stat = sox.file_info.stat(args.source + '/' + args.filename)
-amplitude = stat['Maximum amplitude']
-print(stat)
-
-threshold = (silence / amplitude) * 100
-
 parent_dir = os.getcwd()
 path = os.path.join(parent_dir, args.destination)
 
 if not os.path.exists(path):
   os.makedirs(path)
 
-os.system("cp " + args.source + '/' + args.filename + " " + args.source + '/temp.wav')
-os.system("sox " + args.source + '/temp.wav ' + args.destination + "/" + args.filename + " silence 1 " \
-+ str(args.duration) + " " + str(threshold) + "% 1 " + str(args.duration) + " " + str(threshold) + "% : newfile : restart")
-#Fudge as : newfile : restart creates an extra null file
-list_of_files = sorted(glob.glob(path + '/*.wav')) 
-os.remove(list_of_files[len(list_of_files)-1]) 
+def split_silence(filename):
+  stat = sox.file_info.stat(args.source + '/' + filename)
+  amplitude = stat['Maximum amplitude']
+  print(stat)
+
+  threshold = (silence / amplitude) * 100
+
+  os.system("cp " + args.source + '/' + filename + " " + args.source + '/temp.wav')
+  os.system("sox " + args.source + '/temp.wav ' + args.destination + "/" + filename + " silence 1 " \
+  + str(args.duration) + " " + str(threshold) + "% 1 " + str(args.duration) + " " + str(threshold) + "% : newfile : restart")
+  #Fudge as : newfile : restart creates an extra null file
+  list_of_files = sorted(glob.glob(path + '/*.wav')) 
+  os.remove(list_of_files[len(list_of_files)-1]) 
+  
+def split1sec(filename):
+  print(filename)
+
+def move_files(filename):
+  if re.match('kw.', filename):
+    kwpath = os.path.join(path, 'kw')
+    if not os.path.exists(kwpath):
+      os.makedirs(kwpath)
+    os.system('mv ' + path + '/kw*.wav ' + kwpath + '/')
+
+  elif re.match('notkw.', filename):
+    notkwpath = os.path.join(path, 'notkw')
+    if not os.path.exists(notkwpath):
+      os.makedirs(notkwpath) 
+    os.system('mv ' + path + '/notkw*.wav ' + notkwpath + '/')
+
+  elif re.match('silence.', filename):
+    silencepath = os.path.join(path, 'silence')
+    if not os.path.exists(silencepath):
+      os.makedirs(silencepath) 
+    os.system('mv ' + path + '/silence*.wav ' + silencepath + '/')
+    
+if args.filename == None:
+  exit()
+elif re.match('silence.', args.filename):
+  split1sec(filename)
+  move_files(args.filename)
+else:
+  split_silence(args.filename)
+  move_files(args.filename)
