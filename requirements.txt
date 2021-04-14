@@ -1,1 +1,4 @@
 sounddevice
+soundfile
+numpy==1.19.5
+
