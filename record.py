@@ -30,7 +30,7 @@ if args.list:
 if args.device:
   sd.default.device = args.device
   
-def record(section, message):  
+def record(section, message, readout=None):  
   try:
     if args.directory == None:
       args.directory = "rec"
@@ -44,6 +44,9 @@ def record(section, message):
     with sf.SoundFile(filename, mode='x', samplerate=args.samplerate, channels=args.channels, subtype=args.subtype) as file:
         with sd.InputStream(samplerate=args.samplerate, device=args.device, channels=args.channels, callback=callback):
             print('#' * 80)
+            if not readout == None:
+              print("Pause between words slightly for detction but read out:")
+              print('"' + readout + '"')
             print(message +' ' + section)
             print('#' * 80)
             while True:
@@ -69,13 +72,13 @@ if vinput.lower() == 'y':
 if not args.section:
   record("silence", 'after 1-2 minutes press Ctrl+C to stop recording')
   record("kw", 'repeat kw for 1-2 minutes press Ctrl+C to stop recording')
-  record("notkw", 'press Ctrl+C to stop recording')
+  record("notkw", 'press Ctrl+C to stop recording', 'Your mum')
 elif args.section == "silence":
   record("silence", 'after 1-2 minutes press Ctrl+C to stop recording')
 elif args.section == "kw":
   record("kw", 'repeat kw for 1-2 minutes press Ctrl+C to stop recording')  
 elif args.section == "notkw":
-  record("notkw", 'press Ctrl+C to stop recording')
+  record("notkw", 'press Ctrl+C to stop recording', 'Your mum')
 
 
   
