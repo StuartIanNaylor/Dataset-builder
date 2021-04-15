@@ -17,6 +17,9 @@ parser.add_argument('-n', '--noise', type=float, default=-40, help='Silence nois
 parser.add_argument('-D', '--duration', type=float, default=0.15, help='Minimum silence duration')
 args = parser.parse_args()
 
+
+
+
 if args.silence == None:
   silence = glob.glob(args.source + '/silence*.wav')[0]
   print(silence)
@@ -45,10 +48,20 @@ def split_silence(filename):
   + str(args.duration) + " " + str(threshold) + "% 1 " + str(args.duration) + " " + str(threshold) + "% : newfile : restart")
   #Fudge as : newfile : restart creates an extra null file
   list_of_files = sorted(glob.glob(path + '/*.wav')) 
-  os.remove(list_of_files[len(list_of_files)-1]) 
+  os.remove(list_of_files[len(list_of_files)-1])
+  os.remove(args.source + '/temp.wav') 
   
-def split1sec(filename):
-  print(filename)
+def split1sec(filename, count):
+  stat = sox.file_info.stat(args.source + '/' + filename)
+  duration = int(stat['Length (seconds)'])
+  print(stat)
+  while count < duration:
+    num = '00000'
+    num = num[0 : 5 - len(str(count))]
+    suffix = num + str(count)
+    destfile = os.path.splitext(filename)[0] + '-' + suffix + '.wav'
+    os.system("sox " + args.source + '/' + filename + " " + args.destination + "/" + destfile + ' trim ' + str(count) + ' 1')
+    count += 1
 
 def move_files(filename):
   if re.match('kw.', filename):
@@ -69,10 +82,25 @@ def move_files(filename):
       os.makedirs(silencepath) 
     os.system('mv ' + path + '/silence*.wav ' + silencepath + '/')
     
+if os.path.exists('_background_noise_'):
+  for files in glob.glob('_background_noise_' + '/*.wav'):
+    os.system('mv ' + files + ' ' + args.source + '/silence_' + args.source + os.path.basename(files))
+
+
 if args.filename == None:
-  exit()
+  for files in glob.glob(args.source +'/*.wav'):
+    _, filename = os.path.split(files)
+    print(filename)
+    if re.match('silence.', filename):
+        count = 0
+        split1sec(filename,count)
+        move_files(filename)
+    else:
+        split_silence(filename)
+        move_files(filename)
 elif re.match('silence.', args.filename):
-  split1sec(filename)
+  count = 0
+  split1sec(filename,count)
   move_files(args.filename)
 else:
   split_silence(args.filename)
