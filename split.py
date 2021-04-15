@@ -63,6 +63,19 @@ def split1sec(filename, count):
     os.system("sox " + args.source + '/' + filename + " " + args.destination + "/" + destfile + ' trim ' + str(count) + ' 1')
     count += 1
 
+def split_background(filename, count, backgroundpath):
+  stat = sox.file_info.stat(filename)
+  duration = int(stat['Length (seconds)'])
+  print(stat)
+  while count < duration:
+    num = '00000'
+    num = num[0 : 5 - len(str(count))]
+    suffix = num + str(count)
+    destfile = os.path.splitext(os.path.basename(filename))[0] + '-' + suffix + '.wav'
+    os.system("sox " + filename + " " + backgroundpath + "/" + destfile + ' trim ' + str(count) + ' 1')
+    count += 1
+
+
 def move_files(filename):
   if re.match('kw.', filename):
     kwpath = os.path.join(path, 'kw')
@@ -82,11 +95,6 @@ def move_files(filename):
       os.makedirs(silencepath) 
     os.system('mv ' + path + '/silence*.wav ' + silencepath + '/')
     
-if os.path.exists('_background_noise_'):
-  for files in glob.glob('_background_noise_' + '/*.wav'):
-    os.system('mv ' + files + ' ' + args.source + '/silence_' + args.source + os.path.basename(files))
-
-
 if args.filename == None:
   for files in glob.glob(args.source +'/*.wav'):
     _, filename = os.path.split(files)
@@ -105,3 +113,14 @@ elif re.match('silence.', args.filename):
 else:
   split_silence(args.filename)
   move_files(args.filename)
+  
+if os.path.exists('_background_noise_'):
+  backgroundpath = os.path.join(path, 'background')
+  if not os.path.exists(backgroundpath):
+    os.makedirs(backgroundpath) 
+  for files in glob.glob('_background_noise_' + '/*.wav'):
+    count = 0
+    split_background(files, count, backgroundpath)
+
+  
+
