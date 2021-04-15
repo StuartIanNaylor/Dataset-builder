@@ -129,6 +129,7 @@ rec/
 splits/
 _background_noise_/
 _background_noise_.zip
+dataset/
 
 
 # Pyre type checker
