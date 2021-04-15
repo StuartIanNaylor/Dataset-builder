@@ -13,6 +13,8 @@ parser.add_argument('-d', '--destination', type=str, default='dataset', help='de
 parser.add_argument('-S', '--silence', type=str, default='rec', help='silence reference file')
 parser.add_argument('-b', '--background_vol', type=float, default=0.5, help='Background noise ratio')
 parser.add_argument('-B', '--background_percent', type=float, default=0.8, help='Background noise percentage')
+parser.add_argument('-t', '--testing_percent', type=float, default=0.1, help='dataset testing percent')
+parser.add_argument('-v', '--validation_percent', type=float, default=0.1, help='dataset validation percentage')
 args = parser.parse_args()
 
 def add_silence_pad(filename, cycle, background=None):
@@ -106,4 +108,39 @@ while count < cycles:
     add_silence_pad(files, str(count), background)
   count += 1
 
+kwwav = glob.glob(args.destination + '/kw*.wav')
+
+train_percent = int(len(kwwav) * (1 - args.testing_percent - args.validation_percent))
+print('train percent', train_percent)
+train = kwwav[0 : train_percent]
+
+test_percent = int(len(kwwav) * args.testing_percent) + train_percent
+print('test percent', test_percent)
+test = kwwav[train_percent + 1 : test_percent]
+print(train_percent + 1, test_percent)
+
+validation_percent = int(len(kwwav) * args.validation_percent) + test_percent
+print('validation percent', validation_percent)
+validation = kwwav[test_percent + 1 : validation_percent]
+print(test_percent + 1, validation_percent)
+
+if not os.path.exists(args.destination + '/training'):
+  os.makedirs(args.destination + '/training') 
+
+for files in train:
+  os.system('mv ' + files + ' ' +  args.destination + '/training/' + os.path.basename(files))
+  
+if not os.path.exists(args.destination + '/testing'):
+  os.makedirs(args.destination + '/testing') 
+  
+for files in test:
+  os.system('mv ' + files + ' ' +  args.destination + '/testing/' + os.path.basename(files))
+  
+if not os.path.exists(args.destination + '/validation'):
+  os.makedirs(args.destination + '/validation') 
+  
+for files in validation:
+  os.system('mv ' + files + ' ' +  args.destination + '/validation/' + os.path.basename(files))
+  
+os.system('mv ' +  args.destination + '/kw*.wav ' +  args.destination + '/training/')
 
