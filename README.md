@@ -12,6 +12,8 @@ pip3 install -r requirements.txt
 
 If you want a CLI VU meter then adapt to suit `arecord -D plughw:1 -V mono -r 16000 -f S16_LE -c 1 /dev/null`
 
+If you are struggling with your alsa setting `./alsa.sh` will create a /etc/asound.conf for you
+
 # Usage
 Still a very linear hack but will relatively quickly produce a dataset of 1000 samples of KW from a few recordings.
 
