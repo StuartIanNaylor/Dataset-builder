@@ -108,7 +108,13 @@ if not os.path.exists(args.destination):
   os.makedirs(args.destination) 
 
 min_samples = 1000
-cycles = math.ceil(min_samples / (len(kwwav) * 20))
+
+if args.notkw_percent > args.silence_percent:
+  needed_samples = min_samples / args.silence_percent
+else:
+  needed_samples = min_samples / args.notkw_percent
+  
+cycles = math.ceil(needed_samples / (len(kwwav) * 20))
 
 print(cycles,len(kwwav)) 
 
