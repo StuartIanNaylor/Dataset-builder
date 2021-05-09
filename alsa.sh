@@ -17,7 +17,7 @@ stat=$(sox vol.wav -n stats  2>&1 | grep "Pk lev dB" | sed 's/[^0-9.-]*//g')
 echo
 echo $stat
 
-softvol=$(echo "x = $stat + 3; scale = 0; x / 1" | bc -l)
+softvol=$(echo "x = $stat; scale = 0; x / 1" | bc -l)
 echo $softvol
 maxdb=$(echo ${softvol#-}.0)
 echo $maxdb
@@ -49,9 +49,9 @@ echo | sudo tee -a /etc/asound.conf > /dev/null
 echo "pcm.agc {" | sudo tee -a /etc/asound.conf > /dev/null
 echo " type speex" | sudo tee -a /etc/asound.conf > /dev/null
 echo " slave.pcm \"gain\"" | sudo tee -a /etc/asound.conf > /dev/null
-echo " agc on" | sudo tee -a /etc/asound.conf > /dev/null
+echo " agc off" | sudo tee -a /etc/asound.conf > /dev/null
 echo " agc_level 2000" | sudo tee -a /etc/asound.conf > /dev/null
-echo " denoise on" | sudo tee -a /etc/asound.conf > /dev/null
+echo " denoise off" | sudo tee -a /etc/asound.conf > /dev/null
 echo "}" | sudo tee -a /etc/asound.conf > /dev/null
 echo | sudo tee -a /etc/asound.conf > /dev/null
 echo "pcm.gain {" | sudo tee -a /etc/asound.conf > /dev/null
