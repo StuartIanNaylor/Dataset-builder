@@ -29,7 +29,7 @@ if args.list:
 if args.device:
   sd.default.device = args.device
 
-def record(section):  
+def record(section, duration):  
   if args.directory == None:
     args.directory = "rec"
       
@@ -40,7 +40,7 @@ def record(section):
 
   # Make sure the file is opened before recording anything:
   with sf.SoundFile(filename, mode='x', samplerate=args.samplerate, channels=args.channels, subtype=args.subtype) as file:
-    myrecording = sd.rec(int(args.delay * args.samplerate))
+    myrecording = sd.rec(int(duration * args.samplerate))
     sd.wait()
     file.write(myrecording)
 
@@ -49,21 +49,33 @@ print("Setup up you mic @ 0.3m and test volumes are as high as possible")
 print("After entering your keyword read out the words from the screen")
 keyword = input("Please enter your keyword and press enter:\n")
 
+sentence_count = 0
 sentences = glob.glob(args.language + '*.txt')
 for sentence in sentences:
+  sentence_count += 1
+  if sentence_count > 2:
+    cont = input("Add more words for accuracy? (y/n):\n")
+    sentence_count = 0
+    if not cont == "y":
+      break
 
-  f=open(sentence, "r")
-  fl =f.readlines()
+  f1=open(sentence, "r")
+  fl =f1.readlines()
   for x in fl:
     os.system('clear')
     output = render(x, font='huge', align='center')
     print(output)
-    record("notkw")
+    record("notkw",args.delay)
     os.system('clear')
     output = render(keyword, font='huge', align='center')
     print(output)
-    record("kw")
+    record("kw", args.delay)
   
-  
+os.system('clear')
+print("We are now going to record a minute of voice silence")
+print("Try to make no noise for the minute as we record")
+cont = input("Press enter to record voice silence:\n")
+time.sleep(1)
+record("silence", 60)
 
 
