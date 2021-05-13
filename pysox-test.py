@@ -35,7 +35,7 @@ def get_voice_params(file, silence_maximum_amplitude,file_min_silence_duration=0
   return file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat
 
 def augment(file, cycle):
-
+  
   file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat = get_voice_params(file, silence_maximum_amplitude)
   voice_mean_norm = voice_stat['Mean    norm']
   print(file_maximum_amplitude, file_duration, voice_start, voice_end, "voice_mean_norm=" + str(voice_mean_norm))
@@ -64,7 +64,7 @@ def augment(file, cycle):
     tmp2 = tempfile.NamedTemporaryFile(suffix='.wav')
     tfm1.vol(gain=background_gain, gain_type='amplitude')
     tfm1.build(tmp1.name, tmp2.name)
-
+    tfm1.clear_effects()
     non_voice = 1 - voice_stat['Length (seconds)']
   
     if non_voice >= voice_start:
@@ -72,22 +72,40 @@ def augment(file, cycle):
     else:
       trim_start = voice_start - (non_voice * random.random())
   
-    destfile = os.path.splitext(os.path.basename(file))[0] + '-' + str(cycle) + '-' + str(x) + '.wav'
+    destfile = args.destination + "/" + os.path.splitext(os.path.basename(file))[0] + '-' + str(cycle) + '-' + str(x) + '.wav'
     pitch = random.uniform(abs(args.pitch / 2) * -1, abs(args.pitch / 2))
     tempo = random.uniform(1 - abs(args.tempo / 2), 1 + abs(args.tempo / 2))
     attenuation = random.uniform(1 - abs(args.attenuation), 1)
-    cbn1 = sox.Combiner()
-    cbn1.set_globals(verbosity=1)
-    cbn1.set_input_format(file_type=['wav', 'wav'])
-    cbn1.pitch(pitch)
-    cbn1.tempo(tempo, 's')
-    cbn1.vol(attenuation, gain_type='amplitude')
-    cbn1.trim(trim_start, trim_start + 1)
-    cbn1.build([tmp2.name, file], destfile, 'mix')
+    if random.random() <= args.background_percent:
+      cbn1 = sox.Combiner()
+      cbn1.set_input_format(file_type=['wav', 'wav'])
+      cbn1.pitch(pitch)
+      cbn1.tempo(tempo, 's')
+      cbn1.vol(attenuation, gain_type='amplitude')
+      cbn1.trim(trim_start, trim_start + 1)
+      cbn1.build([tmp2.name, file], destfile, 'mix')
+    else:
+      tfm1.pitch(pitch)
+      tfm1.tempo(tempo, 's')
+      tfm1.vol(attenuation, gain_type='amplitude')
+      tfm1.trim(trim_start, trim_start + 1)
+      tfm1.build(file, destfile)
 
     x += 1
 
-
+def single_silence(file, count):
+    destfile = args.destination + "/" + os.path.splitext(os.path.basename(file))[0] + '-' + str(count) + '.wav'
+    pitch = random.uniform(abs(args.pitch / 2) * -1, abs(args.pitch / 2))
+    tempo = random.uniform(1 - abs(args.tempo / 2), 1 + abs(args.tempo / 2))
+    attenuation = random.uniform(1 - abs(args.attenuation), 1)
+    tfm1 = sox.Transformer()
+    tfm1.pitch(pitch)
+    tfm1.tempo(tempo, 's')
+    tfm1.vol(attenuation, gain_type='amplitude')
+    tfm1.trim(count, count + 1)
+    tfm1.build(file, destfile)  
+    
+    
 parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--background_dir', type=str, default='_background_noise_', help='background noise directory')
 parser.add_argument('-r', '--rec_dir', type=str, default='rec', help='recorded samples directory')
@@ -135,24 +153,184 @@ random.shuffle(kw_files)
 if not os.path.exists(args.destination):
   os.makedirs(args.destination) 
 
-min_samples = 1000
+
+if args.testing_percent > args.validation_percent:
+  min_samples = 100 / args.validation_percent
+else:
+  min_samples = 100 / args.testing_percent
 
 if args.notkw_percent > args.silence_percent:
   needed_samples = min_samples / args.silence_percent
 else:
   needed_samples = min_samples / args.notkw_percent
   
-cycles = math.ceil(needed_samples / (len(kw_files) * 20))
-
+cycles = math.ceil(math.ceil(needed_samples) / 20)
+print(needed_samples, cycles, len(kw_files) )
 count = 0
 while count < cycles:
   for kw_file in kw_files:
     augment(kw_file, count)
-  count += 1
+    count += 1
+    if count > cycles:
+      break
 
+kw_files = glob.glob(args.destination + '/kw*.wav')
+random.shuffle(kw_files)
 
+train_percent = int(len(kw_files) * (1 - args.testing_percent - args.validation_percent))
+print('train percent', train_percent)
+train = kw_files[0 : train_percent]
 
+test_percent = int(len(kw_files) * args.testing_percent) + train_percent
+print('test percent', test_percent)
+test = kw_files[train_percent + 1 : test_percent]
+print(train_percent + 1, test_percent)
 
+validation_percent = int(len(kw_files) * args.validation_percent) + test_percent
+print('validation percent', validation_percent)
+validation = kw_files[test_percent + 1 : validation_percent]
+print(test_percent + 1, validation_percent)
 
-    
-     
+if not os.path.exists(args.destination + '/training'):
+  os.makedirs(args.destination + '/training') 
+if not os.path.exists(args.destination + '/training/kw'):
+  os.makedirs(args.destination + '/training/kw') 
+  
+for files in train:
+  os.system('mv ' + files + ' ' +  args.destination + '/training/kw/' + os.path.basename(files))
+  
+if not os.path.exists(args.destination + '/testing'):
+  os.makedirs(args.destination + '/testing') 
+if not os.path.exists(args.destination + '/testing/kw'):
+  os.makedirs(args.destination + '/testing/kw')   
+  
+for files in test:
+  os.system('mv ' + files + ' ' +  args.destination + '/testing/kw/' + os.path.basename(files))
+  
+if not os.path.exists(args.destination + '/validation'):
+  os.makedirs(args.destination + '/validation') 
+if not os.path.exists(args.destination + '/validation/kw'):
+  os.makedirs(args.destination + '/validation/kw')
+  
+for files in validation:
+  os.system('mv ' + files + ' ' +  args.destination + '/validation/kw/' + os.path.basename(files))
+  
+os.system('rm ' +  args.destination + '/kw*.wav')
+
+notkw_files = glob.glob(args.rec_dir + '/notkw*.wav')
+random.shuffle(notkw_files)
+
+total_kw = validation_percent
+needed_samples = total_kw * args.notkw_percent
+
+cycles = math.ceil(math.ceil(needed_samples) / 20)
+print(needed_samples, cycles, len(kw_files) )
+count = 0
+while count < cycles:
+  for notkw_file in notkw_files:
+    augment(notkw_file, count)
+    count += 1
+    if count > cycles:
+      break    
+notkw_files = glob.glob(args.destination + '/notkw*.wav')
+random.shuffle(notkw_files)
+
+train_percent = int((total_kw * args.notkw_percent) * (1 - args.testing_percent - args.validation_percent))
+print('train percent', train_percent)
+train = notkw_files[0 : train_percent]
+
+test_percent = int((total_kw * args.notkw_percent) * args.testing_percent) + train_percent
+print('test percent', test_percent)
+test = notkw_files[train_percent + 1 : test_percent]
+print(train_percent + 1, test_percent)
+
+validation_percent = int((total_kw * args.notkw_percent) * args.validation_percent) + test_percent
+print('validation percent', validation_percent)
+validation = notkw_files[test_percent + 1 : validation_percent]
+print(test_percent + 1, validation_percent)
+
+if not os.path.exists(args.destination + '/training/notkw'):
+  os.makedirs(args.destination + '/training/notkw') 
+  
+for files in train:
+  os.system('mv ' + files + ' ' +  args.destination + '/training/notkw/' + os.path.basename(files))
+  
+if not os.path.exists(args.destination + '/testing/notkw'):
+  os.makedirs(args.destination + '/testing/notkw')   
+  
+for files in test:
+  os.system('mv ' + files + ' ' +  args.destination + '/testing/notkw/' + os.path.basename(files))
+  
+if not os.path.exists(args.destination + '/validation/notkw'):
+  os.makedirs(args.destination + '/validation/notkw')
+  
+for files in validation:
+  os.system('mv ' + files + ' ' +  args.destination + '/validation/notkw/' + os.path.basename(files))
+  
+os.system('rm ' +  args.destination + '/notkw*.wav')
+
+silence_files = []
+if os.path.exists(args.background_dir):
+  silence_files = glob.glob(args.background_dir + '/*.wav')
+
+silence_files = silence_files + glob.glob(args.rec_dir + '/silence*.wav')
+
+random.shuffle(silence_files)
+
+total_duration = 0
+for silence_file in silence_files:
+  total_duration = total_duration + int(sox.file_info.duration(silence_file))
+
+print("Total duration =" + str(total_duration))
+needed_samples = math.ceil(total_kw * args.silence_percent)
+
+if total_duration >= needed_samples:
+  print(needed_samples, len(silence_files))
+  file_count = 0
+  cycle_count = 1
+  while file_count < needed_samples:
+    for silence_file in silence_files:
+      if int(sox.file_info.duration(silence_file)) > cycle_count:
+        single_silence(silence_file, cycle_count)
+        file_count += 1
+        if file_count > needed_samples:
+          break   
+    cycle_count += 1
+ 
+silence_files = glob.glob(args.destination + '/*.wav')
+random.shuffle(silence_files)
+
+train_percent = int((total_kw * args.silence_percent) * (1 - args.testing_percent - args.validation_percent))
+print('train percent', train_percent)
+train = silence_files[0 : train_percent]
+
+test_percent = int((total_kw * args.silence_percent) * args.testing_percent) + train_percent
+print('test percent', test_percent)
+test = silence_files[train_percent + 1 : test_percent]
+print(train_percent + 1, test_percent)
+
+validation_percent = int((total_kw * args.silence_percent) * args.validation_percent) + test_percent
+print('validation percent', validation_percent)
+validation = silence_files[test_percent + 1 : validation_percent]
+print(test_percent + 1, validation_percent)
+
+if not os.path.exists(args.destination + '/training/silence'):
+  os.makedirs(args.destination + '/training/silence') 
+  
+for files in train:
+  os.system('mv ' + files + ' ' +  args.destination + '/training/silence/' + os.path.basename(files))
+  
+if not os.path.exists(args.destination + '/testing/silence'):
+  os.makedirs(args.destination + '/testing/silence')   
+  
+for files in test:
+  os.system('mv ' + files + ' ' +  args.destination + '/testing/silence/' + os.path.basename(files))
+  
+if not os.path.exists(args.destination + '/validation/silence'):
+  os.makedirs(args.destination + '/validation/silence')
+  
+for files in validation:
+  os.system('mv ' + files + ' ' +  args.destination + '/validation/silence/' + os.path.basename(files))
+  
+os.system('rm ' +  args.destination + '/*.wav')
+
