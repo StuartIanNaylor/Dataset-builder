@@ -43,28 +43,30 @@ def augment(file, cycle):
   
   x = 0
   while x < 21:
-    background_noise_file = background_noise_files[int(background_noise_count * random.random())][0]
-    background_start = (sox.file_info.duration(background_noise_file) - args.background_duration) * random.random() 
+    if len(background_noise_files) > 0:
+      background_noise_file = background_noise_files[int(background_noise_count * random.random())][0]
+      background_start = (sox.file_info.duration(background_noise_file) - args.background_duration) * random.random() 
 
-    tmp1 = tempfile.NamedTemporaryFile(suffix='.wav')
-    tfm1 = sox.Transformer()
-    tfm1.trim(start_time=background_start, end_time=background_start + args.background_duration)
-    tfm1.build(background_noise_file, tmp1.name)
-    tfm1.clear_effects()
+      tmp1 = tempfile.NamedTemporaryFile(suffix='.wav')
+      tfm1 = sox.Transformer()
+      tfm1.trim(start_time=background_start, end_time=background_start + args.background_duration)
+      tfm1.build(background_noise_file, tmp1.name)
+      tfm1.clear_effects()
 
-    background_stat = sox.file_info.stat(tmp1.name)
-    background_mean_norm = background_stat['Mean    norm']
-    print(background_start, "background_mean_nor=" + str(background_mean_norm))
-    print(background_stat)
-    attenuation = random.uniform(1 - abs(args.attenuation), 1)
-    background_target = voice_mean_norm * args.background_ratio
-    background_gain = (background_target / background_mean_norm) * attenuation
-    print("background_target=" + str(background_target),"background_gain=" + str(background_gain))
+      background_stat = sox.file_info.stat(tmp1.name)
+      background_mean_norm = background_stat['Mean    norm']
+      print(background_start, "background_mean_nor=" + str(background_mean_norm))
+      print(background_stat)
+      attenuation = random.uniform(1 - abs(args.background_attenuation), 1)
+      background_target = voice_mean_norm * args.background_ratio
+      background_gain = (background_target / background_mean_norm) * attenuation
+      print("background_target=" + str(background_target),"background_gain=" + str(background_gain))
 
-    tmp2 = tempfile.NamedTemporaryFile(suffix='.wav')
-    tfm1.vol(gain=background_gain, gain_type='amplitude')
-    tfm1.build(tmp1.name, tmp2.name)
-    tfm1.clear_effects()
+      tmp2 = tempfile.NamedTemporaryFile(suffix='.wav')
+      tfm1.vol(gain=background_gain, gain_type='amplitude')
+      tfm1.build(tmp1.name, tmp2.name)
+      tfm1.clear_effects()
+      
     non_voice = 1 - voice_stat['Length (seconds)']
   
     if non_voice >= voice_start:
@@ -75,8 +77,8 @@ def augment(file, cycle):
     destfile = args.destination + "/" + os.path.splitext(os.path.basename(file))[0] + '-' + str(cycle) + '-' + str(x) + '.wav'
     pitch = random.uniform(abs(args.pitch / 2) * -1, abs(args.pitch / 2))
     tempo = random.uniform(1 - abs(args.tempo / 2), 1 + abs(args.tempo / 2))
-    attenuation = random.uniform(1 - abs(args.attenuation), 1)
-    if random.random() <= args.background_percent:
+    attenuation = random.uniform(1 - abs(args.foreground_attenuation), 1)
+    if random.random() <= args.background_percent and len(background_noise_files) > 0:
       cbn1 = sox.Combiner()
       cbn1.set_input_format(file_type=['wav', 'wav'])
       cbn1.pitch(pitch)
@@ -85,19 +87,22 @@ def augment(file, cycle):
       cbn1.trim(trim_start, trim_start + 1)
       cbn1.build([tmp2.name, file], destfile, 'mix')
     else:
-      tfm1.pitch(pitch)
-      tfm1.tempo(tempo, 's')
-      tfm1.vol(attenuation, gain_type='amplitude')
-      tfm1.trim(trim_start, trim_start + 1)
-      tfm1.build(file, destfile)
+      tfm2 = sox.Transformer()
+      tfm2.pitch(pitch)
+      tfm2.tempo(tempo, 's')
+      tfm2.vol(attenuation, gain_type='amplitude')
+      tfm2.trim(trim_start, trim_start + 1)
+      tfm2.build(file, destfile)
 
     x += 1
 
-def single_silence(file, count):
+def single_silence(file, count, repeat=False):
     destfile = args.destination + "/" + os.path.splitext(os.path.basename(file))[0] + '-' + str(count) + '.wav'
+    if repeat == True:
+      count = 0
     pitch = random.uniform(abs(args.pitch / 2) * -1, abs(args.pitch / 2))
     tempo = random.uniform(1 - abs(args.tempo / 2), 1 + abs(args.tempo / 2))
-    attenuation = random.uniform(1 - abs(args.attenuation), 1)
+    attenuation = random.uniform(1 - abs(args.foreground_attenuation), 1)
     tfm1 = sox.Transformer()
     tfm1.pitch(pitch)
     tfm1.tempo(tempo, 's')
@@ -114,7 +119,8 @@ parser.add_argument('-d', '--background_duration', type=float, default=2.5, help
 parser.add_argument('-p', '--pitch', type=float, default=1.0, help='pitch semitones range')
 parser.add_argument('-t', '--tempo', type=float, default=0.2, help='tempo percentage range')
 parser.add_argument('-D', '--destination', type=str, default='dataset', help='destination directory')
-parser.add_argument('-a', '--attenuation', type=float, default=0.3, help='random attenuation range')
+parser.add_argument('-a', '--foreground_attenuation', type=float, default=0.3, help='foreground random attenuation range')
+parser.add_argument('-A', '--background_attenuation', type=float, default=0.3, help='background random attenuation range')
 parser.add_argument('-B', '--background_percent', type=float, default=0.8, help='Background noise percentage')
 parser.add_argument('-T', '--testing_percent', type=float, default=0.1, help='dataset testing percent')
 parser.add_argument('-v', '--validation_percent', type=float, default=0.1, help='dataset validation percentage')
@@ -285,6 +291,7 @@ print("Total duration =" + str(total_duration))
 needed_samples = math.ceil(total_kw * args.silence_percent)
 
 if total_duration >= needed_samples:
+#if we have enough duration then they will be split and added in proportion to length
   print(needed_samples, len(silence_files))
   file_count = 0
   cycle_count = 1
@@ -295,6 +302,16 @@ if total_duration >= needed_samples:
         file_count += 1
         if file_count > needed_samples:
           break   
+    cycle_count += 1
+else:
+  file_count = 0
+  cycle_count = 1
+  while file_count < needed_samples:
+    for silence_file in silence_files:
+      single_silence(silence_file, cycle_count, True)
+      file_count += 1
+      if file_count > needed_samples:
+        break   
     cycle_count += 1
  
 silence_files = glob.glob(args.destination + '/*.wav')
