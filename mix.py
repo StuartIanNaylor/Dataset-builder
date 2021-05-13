@@ -56,9 +56,9 @@ def augment(file, cycle):
     background_mean_norm = background_stat['Mean    norm']
     print(background_start, "background_mean_nor=" + str(background_mean_norm))
     print(background_stat)
-
+    attenuation = random.uniform(1 - abs(args.attenuation), 1)
     background_target = voice_mean_norm * args.background_ratio
-    background_gain = background_target / background_mean_norm
+    background_gain = (background_target / background_mean_norm) * attenuation
     print("background_target=" + str(background_target),"background_gain=" + str(background_gain))
 
     tmp2 = tempfile.NamedTemporaryFile(suffix='.wav')
