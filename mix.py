@@ -6,7 +6,7 @@ import os
 import tempfile
 import math
 
-def get_voice_params(file, silence_maximum_amplitude,file_min_silence_duration=0.2):
+def get_voice_params(file, silence_maximum_amplitude):
 
   stat = sox.file_info.stat(file)
   file_maximum_amplitude = stat['Maximum amplitude']
@@ -18,14 +18,14 @@ def get_voice_params(file, silence_maximum_amplitude,file_min_silence_duration=0
   tmp2 = tempfile.NamedTemporaryFile(suffix='.wav')
 
   tfm1 = sox.Transformer()
-  tfm1.silence(location=-1, min_silence_duration=file_min_silence_duration, silence_threshold=percent_silence_threshold, buffer_around_silence=True)
+  tfm1.silence(location=-1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold, buffer_around_silence=True)
   tfm1.build(file, tmp1.name)
   tfm1.clear_effects()
 
   stat = sox.file_info.stat(tmp1.name)
   voice_end = stat['Length (seconds)']
 
-  tfm1.silence(location=1, min_silence_duration=file_min_silence_duration, silence_threshold=percent_silence_threshold, buffer_around_silence=True)
+  tfm1.silence(location=1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold, buffer_around_silence=True)
   tfm1.build(tmp1.name, tmp2.name)
   tfm1.clear_effects()
 
@@ -67,17 +67,18 @@ def augment(file, cycle):
       tfm1.build(tmp1.name, tmp2.name)
       tfm1.clear_effects()
       
-    non_voice = 1 - voice_stat['Length (seconds)']
-  
+    
+    destfile = args.destination + "/" + os.path.splitext(os.path.basename(file))[0] + '-' + str(cycle) + '-' + str(x) + '.wav'
+    pitch = random.uniform(abs(args.pitch / 2) * -1, abs(args.pitch / 2))
+    tempo = random.uniform(1 - abs(args.tempo / 2), 1 + abs(args.tempo / 2))
+    attenuation = random.uniform(1 - abs(args.foreground_attenuation), 1)
+    non_voice = 1 - (voice_stat['Length (seconds)'] / tempo)
     if non_voice >= voice_start:
       trim_start = voice_start * random.random() 
     else:
       trim_start = voice_start - (non_voice * random.random())
   
-    destfile = args.destination + "/" + os.path.splitext(os.path.basename(file))[0] + '-' + str(cycle) + '-' + str(x) + '.wav'
-    pitch = random.uniform(abs(args.pitch / 2) * -1, abs(args.pitch / 2))
-    tempo = random.uniform(1 - abs(args.tempo / 2), 1 + abs(args.tempo / 2))
-    attenuation = random.uniform(1 - abs(args.foreground_attenuation), 1)
+
     if random.random() <= args.background_percent and len(background_noise_files) > 0:
       cbn1 = sox.Combiner()
       cbn1.set_input_format(file_type=['wav', 'wav'])
@@ -114,18 +115,19 @@ def single_silence(file, count, repeat=False):
 parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--background_dir', type=str, default='_background_noise_', help='background noise directory')
 parser.add_argument('-r', '--rec_dir', type=str, default='rec', help='recorded samples directory')
-parser.add_argument('-R', '--background_ratio', type=float, default=0.3, help='background ratio to foreground')
+parser.add_argument('-R', '--background_ratio', type=float, default=0.4, help='background ratio to foreground')
 parser.add_argument('-d', '--background_duration', type=float, default=2.5, help='background split duration')
-parser.add_argument('-p', '--pitch', type=float, default=1.0, help='pitch semitones range')
+parser.add_argument('-p', '--pitch', type=float, default=1.5, help='pitch semitones range')
 parser.add_argument('-t', '--tempo', type=float, default=0.2, help='tempo percentage range')
 parser.add_argument('-D', '--destination', type=str, default='dataset', help='destination directory')
 parser.add_argument('-a', '--foreground_attenuation', type=float, default=0.3, help='foreground random attenuation range')
-parser.add_argument('-A', '--background_attenuation', type=float, default=0.3, help='background random attenuation range')
+parser.add_argument('-A', '--background_attenuation', type=float, default=0.4, help='background random attenuation range')
 parser.add_argument('-B', '--background_percent', type=float, default=0.8, help='Background noise percentage')
 parser.add_argument('-T', '--testing_percent', type=float, default=0.1, help='dataset testing percent')
 parser.add_argument('-v', '--validation_percent', type=float, default=0.1, help='dataset validation percentage')
 parser.add_argument('-S', '--silence_percent', type=float, default=0.3, help='dataset silence percentage')
 parser.add_argument('-n', '--notkw_percent', type=float, default=0.5, help='dataset notkw percentage')
+parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.2, help='Min length of silence')
 args = parser.parse_args()
 
 silence_files = glob.glob(args.rec_dir + '/silence*.wav')
@@ -161,9 +163,9 @@ if not os.path.exists(args.destination):
 
 
 if args.testing_percent > args.validation_percent:
-  min_samples = 100 / args.validation_percent
+  min_samples = 200 / args.validation_percent
 else:
-  min_samples = 100 / args.testing_percent
+  min_samples = 200 / args.testing_percent
 
 if args.notkw_percent > args.silence_percent:
   needed_samples = min_samples / args.silence_percent
@@ -280,7 +282,6 @@ if os.path.exists(args.background_dir):
   silence_files = glob.glob(args.background_dir + '/*.wav')
 
 silence_files = silence_files + glob.glob(args.rec_dir + '/silence*.wav')
-
 random.shuffle(silence_files)
 
 total_duration = 0
