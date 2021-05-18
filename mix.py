@@ -11,9 +11,9 @@ def get_voice_params(file, silence_maximum_amplitude):
   stat = sox.file_info.stat(file)
   file_maximum_amplitude = stat['Maximum amplitude']
   file_duration = stat['Length (seconds)']
-
+  
   percent_silence_threshold = (silence_maximum_amplitude / file_maximum_amplitude) * 100
-
+  print (percent_silence_threshold, silence_maximum_amplitude, file_maximum_amplitude)
   tmp1 = tempfile.NamedTemporaryFile(suffix='.wav')
   tmp2 = tempfile.NamedTemporaryFile(suffix='.wav')
 
