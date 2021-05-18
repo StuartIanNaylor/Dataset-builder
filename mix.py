@@ -9,37 +9,34 @@ import math
 def get_voice_params(file, silence_maximum_amplitude):
 
   stat = sox.file_info.stat(file)
-  file_maximum_amplitude = stat['Maximum amplitude']
+  file_maximum_amplitude = stat['Maximum amplitude'] 
   file_duration = stat['Length (seconds)']
   
-  percent_silence_threshold = (silence_maximum_amplitude / file_maximum_amplitude) * 100
+  percent_silence_threshold = silence_maximum_amplitude * 105
   print (percent_silence_threshold, silence_maximum_amplitude, file_maximum_amplitude)
-  tmp1 = tempfile.NamedTemporaryFile(suffix='.wav')
-  tmp2 = tempfile.NamedTemporaryFile(suffix='.wav')
 
-  tfm1 = sox.Transformer()
-  tfm1.silence(location=-1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold, buffer_around_silence=True)
-  tfm1.build(file, tmp1.name)
-  tfm1.clear_effects()
+  
+  tfm2 = sox.Transformer()
+  tfm2.silence(location=-1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold)
+  tfm2.build(file, '/tmp/temp2.wav')
+  tfm2.clear_effects()
+  stat = sox.file_info.stat('/tmp/temp2.wav')
+  voice_end = stat['Length (seconds)'] 
 
-  stat = sox.file_info.stat(tmp1.name)
-  voice_end = stat['Length (seconds)']
-
-  tfm1.silence(location=1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold, buffer_around_silence=True)
-  tfm1.build(tmp1.name, tmp2.name)
-  tfm1.clear_effects()
-
-  voice_stat = sox.file_info.stat(tmp2.name)
+  tfm3 = sox.Transformer()
+  tfm3.silence(location=1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold)
+  tfm3.build('/tmp/temp2.wav', '/tmp/temp3.wav')
+  tfm3.clear_effects()
+  voice_stat = sox.file_info.stat('/tmp/temp3.wav')
   voice_start = voice_end - voice_stat['Length (seconds)']
 
   return file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat
 
 def augment(file, cycle):
-  
+  print(file)
   file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat = get_voice_params(file, silence_maximum_amplitude)
   voice_mean_norm = voice_stat['Mean    norm']
   print(file_maximum_amplitude, file_duration, voice_start, voice_end, "voice_mean_norm=" + str(voice_mean_norm))
-  print(voice_stat)
   
   x = 0
   while x < 21:
@@ -55,12 +52,10 @@ def augment(file, cycle):
 
       background_stat = sox.file_info.stat(tmp1.name)
       background_mean_norm = background_stat['Mean    norm']
-      print(background_start, "background_mean_nor=" + str(background_mean_norm))
-      print(background_stat)
       attenuation = random.uniform(1 - abs(args.background_attenuation), 1)
       background_target = voice_mean_norm * args.background_ratio
       background_gain = (background_target / background_mean_norm) * attenuation
-      print("background_target=" + str(background_target),"background_gain=" + str(background_gain))
+      #print("background_target=" + str(background_target),"background_gain=" + str(background_gain))
 
       tmp2 = tempfile.NamedTemporaryFile(suffix='.wav')
       tfm1.vol(gain=background_gain, gain_type='amplitude')
@@ -127,13 +122,20 @@ parser.add_argument('-T', '--testing_percent', type=float, default=0.1, help='da
 parser.add_argument('-v', '--validation_percent', type=float, default=0.1, help='dataset validation percentage')
 parser.add_argument('-S', '--silence_percent', type=float, default=0.3, help='dataset silence percentage')
 parser.add_argument('-n', '--notkw_percent', type=float, default=0.5, help='dataset notkw percentage')
-parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.2, help='Min length of silence')
+parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1, help='Min length of silence')
 args = parser.parse_args()
 
 silence_files = glob.glob(args.rec_dir + '/silence*.wav')
 silence_file = silence_files[0]
-stat = sox.file_info.stat(silence_file)
-silence_maximum_amplitude = stat['Maximum amplitude'] 
+#Some soundcards can ramp and click at start
+tmp1 = tempfile.NamedTemporaryFile(suffix='.wav')
+tfm1 = sox.Transformer()
+tfm1.trim(start_time=0.2)
+tfm1.build(silence_file, tmp1.name)
+tfm1.clear_effects()
+
+stat = sox.file_info.stat(tmp1.name)
+silence_maximum_amplitude = stat['Maximum amplitude']
 
 background_noise_files = []
 # If the _background_noise_ dir exists we will add an element for each second of the noise file duration
