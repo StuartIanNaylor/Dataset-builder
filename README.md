@@ -158,8 +158,8 @@ parser.add_argument('-n', '--notkw_percent', type=float, default=0.5, help='data
 parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1, help='Min length of silence')
 parser.add_argument('-H', '--silence_headroom', type=float, default=5.0, help='silence threshold headroom ')
 parser.add_argument('-m', '--min_samples', type=int, default=200, help='minimum resultant samples')
-
+```
 The defaults for background ratio and the attenuations is a good starting point and increasing the ratio can help with noise for fractional minimal accuracy loss.
 You environment will set optimal parameters but as the dataset is a starter dataset the defaults maybe high enough try those and then maybe @ 0.8 background ratio and test results.
-```
+
 
