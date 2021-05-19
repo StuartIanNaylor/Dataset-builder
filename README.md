@@ -163,3 +163,16 @@ The defaults for background ratio and the attenuations is a good starting point 
 You environment will set optimal parameters but as the dataset is a starter dataset the defaults maybe high enough try those and then maybe @ 0.8 background ratio and test results.
 
 
+A rough Background_noise example has been given conatining some random sounds you will need to collect and make your own for your own environment.
+
+https://github.com/jim-schwoebel/download_audioset
+
+https://homepages.tuni.fi/toni.heittola/datasets.html
+
+https://github.com/karolpiczak/ESC-50
+
+http://pdsounds.tuxfamily.org/
+
+https://urbansounddataset.weebly.com/
+
+https://github.com/microsoft/MS-SNSD
