@@ -177,5 +177,5 @@ https://urbansounddataset.weebly.com/
 
 https://github.com/microsoft/MS-SNSD
 
-Background noise is added to the silence classification using recorded volume as the start point you should use audacity to test you mics record levels and normalise to -3dB less and also maybe another set at half that volume again to vary your silence collection.
+Background noise is added to the silence classification using recorded volume as the start point you should use audacity to test you mics record levels and normalise to -3dB less (0.707946) and also maybe another set at half that volume again to vary your silence collection.
 
