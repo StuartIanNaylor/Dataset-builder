@@ -73,7 +73,8 @@ To use a folder based dataset set the Googleresearch_streaming_kws paramters to 
 You can try and my basic adaption and install instructions from https://github.com/StuartIanNaylor/g-kws
 
 There is a sample background_noise folder here with additional samples where you should add your own silence files, the 4 silence files where just copies to add a higher proportion of silence as background_noise. Overwrite with ours and add any non spoken noise you may think will help with your environ.
-https://drive.google.com/file/d/1qyV2hsM8ODbfyFHdc_L0PrfEOcdWqr_F/view?usp=sharing
+https://drive.google.com/file/d/1qyV2hsM8ODbfyFHdc_L0PrfEOcdWqr_F/view?usp=sharing and here https://drive.google.com/file/d/11IAG4wrbDHuMPVjvj5NQXnohO7lXNeCa/view?usp=sharing
+
 
 
 ```
@@ -178,6 +179,8 @@ http://pdsounds.tuxfamily.org/
 https://urbansounddataset.weebly.com/
 
 https://github.com/microsoft/MS-SNSD
+
+https://drive.google.com/file/d/11IAG4wrbDHuMPVjvj5NQXnohO7lXNeCa/view?usp=sharing
 
 Background noise is added to the silence classification using recorded volume as the start point you should use audacity to test you mics record levels and normalise to -3dB less (0.707946) and also maybe another set at half that volume again to vary your silence collection.
 
