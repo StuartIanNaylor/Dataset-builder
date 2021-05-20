@@ -49,6 +49,7 @@ Before you do to add more variation to background-noise create a '_background_no
 https://drive.google.com/file/d/1qyV2hsM8ODbfyFHdc_L0PrfEOcdWqr_F/view?usp=sharing 
 This selection may also be usefull.
 https://drive.google.com/file/d/11IAG4wrbDHuMPVjvj5NQXnohO7lXNeCa/view?usp=sharing
+https://drive.google.com/file/d/1yFNr3ruezx0XDB0fTxsytR7eK3CjV8fZ/view?usp=sharing
 
 
 Finally run `python3 mix.py` again you can do a `python3 mix.py -h` if you wish to change from default parameters.
@@ -74,9 +75,7 @@ You can try and my basic adaption and install instructions from https://github.c
 
 There is a sample background_noise folder here with additional samples where you should add your own silence files, the 4 silence files where just copies to add a higher proportion of silence as background_noise. Overwrite with ours and add any non spoken noise you may think will help with your environ.
 https://drive.google.com/file/d/1qyV2hsM8ODbfyFHdc_L0PrfEOcdWqr_F/view?usp=sharing and here https://drive.google.com/file/d/11IAG4wrbDHuMPVjvj5NQXnohO7lXNeCa/view?usp=sharing
-
-
-
+https://drive.google.com/file/d/1yFNr3ruezx0XDB0fTxsytR7eK3CjV8fZ/view?usp=sharing
 ```
 python3 mix.py --help
 usage: mix.py [-h] [-b BACKGROUND_DIR] [-r REC_DIR] [-R BACKGROUND_RATIO] [-d BACKGROUND_DURATION] [-p PITCH] [-t TEMPO] [-D DESTINATION]
