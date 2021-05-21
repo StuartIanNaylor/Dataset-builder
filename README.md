@@ -46,7 +46,7 @@ You might want to review those files with audacity or some other editor just to 
 
 The dataset expects a folder of background_noise where an example is created below and also your silence files are added to.
 Before you do to add more variation to background-noise create a '_background_noise_' dir and add some applicable noise files an example zip can downloaded from 
-https://drive.google.com/file/d/1qyV2hsM8ODbfyFHdc_L0PrfEOcdWqr_F/view?usp=sharing 
+https://drive.google.com/file/d/1mV_opi70qu-mCLid7CsB4BJDoX5nfdOi/view?usp=sharing 
 
 This selection may also be usefull.
 
