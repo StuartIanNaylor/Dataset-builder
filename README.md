@@ -48,11 +48,11 @@ The dataset expects a folder of background_noise where an example is created bel
 Before you do to add more variation to background-noise create a '_background_noise_' dir and add some applicable noise files an example zip can downloaded from 
 https://drive.google.com/file/d/1mV_opi70qu-mCLid7CsB4BJDoX5nfdOi/view?usp=sharing 
 
-This selection may also be usefull.
+Also.
 
-https://drive.google.com/file/d/11IAG4wrbDHuMPVjvj5NQXnohO7lXNeCa/view?usp=sharing
+https://drive.google.com/file/d/1qmbm7yur8GfICOvyUfvBY6c7vXV8yVem/view?usp=sharing
 
-https://drive.google.com/file/d/1yFNr3ruezx0XDB0fTxsytR7eK3CjV8fZ/view?usp=sharing
+https://drive.google.com/file/d/1pa58ERBdp4UijRUGEDBQjFv7jIKUROqx/view?usp=sharing
 
 
 Finally run `python3 mix.py` again you can do a `python3 mix.py -h` if you wish to change from default parameters.
