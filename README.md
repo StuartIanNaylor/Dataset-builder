@@ -83,10 +83,11 @@ https://drive.google.com/file/d/1qmbm7yur8GfICOvyUfvBY6c7vXV8yVem/view?usp=shari
 
 https://drive.google.com/file/d/1pa58ERBdp4UijRUGEDBQjFv7jIKUROqx/view?usp=sharing
 ```
-python3 mix.py --help
-usage: mix.py [-h] [-b BACKGROUND_DIR] [-r REC_DIR] [-R BACKGROUND_RATIO] [-d BACKGROUND_DURATION] [-p PITCH] [-t TEMPO] [-D DESTINATION]
-              [-a FOREGROUND_ATTENUATION] [-A BACKGROUND_ATTENUATION] [-B BACKGROUND_PERCENT] [-T TESTING_PERCENT] [-v VALIDATION_PERCENT]
-              [-S SILENCE_PERCENT] [-n NOTKW_PERCENT] [-s FILE_MIN_SILENCE_DURATION] [-H SILENCE_HEADROOM] [-m MIN_SAMPLES]
+ppython3 mix.py --help
+usage: mix.py [-h] [-b BACKGROUND_DIR] [-r REC_DIR] [-R BACKGROUND_RATIO] [-d BACKGROUND_DURATION] [-p PITCH] [-t TEMPO]
+              [-D DESTINATION] [-a FOREGROUND_ATTENUATION] [-A BACKGROUND_ATTENUATION] [-B BACKGROUND_PERCENT]
+              [-T TESTING_PERCENT] [-v VALIDATION_PERCENT] [-S SILENCE_PERCENT] [-n NOTKW_PERCENT]
+              [-s FILE_MIN_SILENCE_DURATION] [-H SILENCE_HEADROOM] [-m MIN_SAMPLES] [-N NORM_SILENCE]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -124,6 +125,9 @@ optional arguments:
                         silence threshold headroom
   -m MIN_SAMPLES, --min_samples MIN_SAMPLES
                         minimum resultant samples
+  -N NORM_SILENCE, --norm_silence NORM_SILENCE
+                        normalise silence files
+
 ```
 
 Probably the important parameter is `--background_ratio` this sets the is ratio of the max_amplitude of background_noise to the kw & !kw voiced samples.
