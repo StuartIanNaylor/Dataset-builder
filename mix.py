@@ -14,31 +14,31 @@ def get_voice_params(file, silence_maximum_amplitude):
   file_duration = stat['Length (seconds)']
   
   percent_silence_threshold = silence_maximum_amplitude * (100 + args.silence_headroom)
-  print (percent_silence_threshold, silence_maximum_amplitude, file_maximum_amplitude)
+  #print (percent_silence_threshold, silence_maximum_amplitude, file_maximum_amplitude)
 
   
   tfm2 = sox.Transformer()
-  tfm2.silence(location=-1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold)
+  tfm2.silence(location=-1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold, buffer_around_silence=True)
   tfm2.build(file, '/tmp/temp2.wav')
   tfm2.clear_effects()
   stat = sox.file_info.stat('/tmp/temp2.wav')
   voice_end = float(stat['Length (seconds)'])
 
   tfm3 = sox.Transformer()
-  tfm3.silence(location=1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold)
+  tfm3.silence(location=1, min_silence_duration=args.file_min_silence_duration, silence_threshold=percent_silence_threshold, buffer_around_silence=True)
   tfm3.build('/tmp/temp2.wav', '/tmp/temp3.wav')
   tfm3.clear_effects()
   
   tfm4 = sox.Transformer()
   voice_stat = tfm4.stat('/tmp/temp3.wav')
   voice_stats = tfm4.stats('/tmp/temp3.wav')
-  print(voice_stats)
-  print(voice_stat['Length (seconds)'])
+  #print(voice_stats)
+  #print(voice_stat['Length (seconds)'])
   voice_start = voice_end - float(voice_stat['Length (seconds)'])
 
   return file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats
 
-def augment(file, cycle):
+def augment(file, cycle, norm=False):
   print(file)
   file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params(file, silence_maximum_amplitude)
   voice_mean_norm = float(voice_stat['Mean norm'])
@@ -78,13 +78,15 @@ def augment(file, cycle):
     destfile = args.destination + "/" + os.path.splitext(os.path.basename(file))[0] + '-' + str(cycle) + '-' + str(x) + '.wav'
     pitch = random.uniform(abs(args.pitch / 2) * -1, abs(args.pitch / 2))
     tempo = random.uniform(1 - abs(args.tempo / 2), 1 + abs(args.tempo / 2))
-    attenuation = random.uniform(1 - abs(args.foreground_attenuation), 1)
-    non_voice = 1 - (float(voice_stat['Length (seconds)']) / tempo)
-    if non_voice >= voice_start:
-      trim_start = voice_start * random.random() 
+    if norm == True:
+      norm_gain_high = 1 - file_maximum_amplitude + 1
+      norm_gain_low = 0.1
     else:
-      trim_start = voice_start - (non_voice * random.random())
-  
+      norm_gain_high = 1
+      norm_gain_low = 1 - abs(args.foreground_attenuation)
+    attenuation = random.uniform(norm_gain_low, norm_gain_high)
+    non_voice = 1 - (float(voice_stat['Length (seconds)']) / tempo)
+    trim_start = voice_start - (non_voice / 2)
 
     if random.random() <= args.background_percent and len(background_noise_files) > 0:
       cbn1 = sox.Combiner()
@@ -155,7 +157,7 @@ parser.add_argument('-v', '--validation_percent', type=float, default=0.1, help=
 parser.add_argument('-S', '--silence_percent', type=float, default=0.4, help='dataset silence percentage')
 parser.add_argument('-n', '--notkw_percent', type=float, default=0.6, help='dataset notkw percentage')
 parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1, help='Min length of silence')
-parser.add_argument('-H', '--silence_headroom', type=float, default=5.0, help='silence threshold headroom ')
+parser.add_argument('-H', '--silence_headroom', type=float, default=1.0, help='silence threshold headroom ')
 parser.add_argument('-m', '--min_samples', type=int, default=200, help='minimum resultant samples')
 parser.add_argument('-N', '--norm_silence', type=bool, default=True, help='normalise silence files')
 args = parser.parse_args()
@@ -191,8 +193,84 @@ if os.path.exists(args.background_dir):
 random.shuffle(background_noise_files)
 background_noise_count = len(background_noise_files)
 
+
+
 kw_files = glob.glob(args.rec_dir + '/kw*.wav')
 random.shuffle(kw_files)
+kw_count = 0
+kw_sum = 0.0
+kw_undersize_count = 0
+kw_oversize_count = 0
+#silence_headroom, file_min_silence_duration set the paramters for voice extraction.
+#somtimes some voice just doesn't fit and bad recordings many will not fit
+#you may have to play with the settings and open the files to see why
+#this provides a rough check to find similar duration or kick
+#if too many then exit
+print(len(kw_files))
+for kw_file in kw_files:
+  file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params(kw_file, silence_maximum_amplitude)
+  kw_duration = voice_end - voice_start
+  kw_count += 1
+  last_kw_sum = kw_sum
+  kw_sum = kw_sum + kw_duration
+  kw_average = kw_sum / kw_count
+  
+  print(kw_file, file_maximum_amplitude, file_duration, voice_start, voice_end) #, voice_stat, voice_stats
+  if kw_duration > kw_average * 1.25:
+    print(kw_file + ' is over size')
+    kw_oversize_count += 1
+    kw_files.remove(kw_file)
+    kw_sum = last_kw_sum
+    kw_count -= 1
+  if kw_duration < kw_average * 0.75:
+    print(kw_file + ' is under size')
+    kw_undersize_count += 1
+    kw_files.remove(kw_file)
+    kw_sum = last_kw_sum
+    kw_count -= 1
+if kw_oversize_count >= kw_count * 0.1:
+  print("Too many samples are oversize")
+  exit()
+if kw_oversize_count >= 1:
+  print('Some KW have been ejected for being oversize')
+if kw_undersize_count >= kw_count * 0.1:
+  print("Too many samples are undersize")
+  exit()
+if kw_undersize_count >= 1:
+  print('Some KW have been ejected for being undersize')
+  
+print(len(kw_files))
+
+#notkw_durations = []
+#notkw_files = glob.glob(args.rec_dir + '/notkw*.wav')
+#random.shuffle(notkw_files)
+#for notkw_file in notkw_files:
+#  file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params(notkw_file, silence_maximum_amplitude)
+#  notkw_duration = [[notkw_file], [voice_end - voice_start], [voice_end], [voice_start]]
+#  print(notkw_duration)
+#  notkw_durations.append(notkw_duration)
+  
+#print(notkw_durations)
+
+#for first_duration in notkw_durations:
+#  print(first_duration[0][0])
+#  first_duration_notkw = str(first_duration[0][0])
+#  first_duration_length = float(first_duration[1][0])
+#  for second_duration in notkw_durations:
+#    second_duration_notkw = str(second_duration[0][0])
+#    second_duration_length = float(second_duration[1][0])
+#    if (first_duration_length + second_duration_length) > (kw_average * 0.975) and (first_duration_length + second_duration_length) < (kw_average * 1.025):
+#      print('Yeah!', first_duration_notkw, second_duration_notkw)
+#      tfm1 = sox.Transformer()
+#      tfm1.trim(start_time=first_duration[3][0], end_time=first_duration[2][0])
+#      tfm1.build(first_duration_notkw, '/tmp/temp1.wav')
+#      tfm2 = sox.Transformer()
+#      tfm2.trim(start_time=second_duration[3][0], end_time=second_duration[2][0])
+#      tfm2.build(second_duration_notkw, '/tmp/temp2.wav')
+#      cbn1 = sox.Combiner()
+#      cbn1.set_input_format(file_type=['wav', 'wav'])
+#      cbn1.build(['/tmp/temp1.wav', '/tmp/temp2.wav'], os.path.splitext(os.path.basename(first_duration_notkw))[0] + '-' + os.path.splitext(os.path.basename(second_duration_notkw))[0] + '.wav', 'concatenate')
+#      break
 
 
 if not os.path.exists(args.destination):
@@ -222,7 +300,7 @@ while count < cycles:
     voice_mean_norm = voice_mean_norm + augment(kw_file, count)
     voice_mean_count += 1
   count += 1
-
+  
 kw_files = glob.glob(args.destination + '/kw*.wav')
 random.shuffle(kw_files)
 
@@ -269,6 +347,45 @@ os.system('rm ' +  args.destination + '/kw*.wav')
 notkw_files = glob.glob(args.rec_dir + '/notkw*.wav')
 random.shuffle(notkw_files)
 
+notkw_count = 0
+notkw_undersize_count = 0
+notkw_oversize_count = 0
+#silence_headroom, file_min_silence_duration set the paramters for voice extraction.
+#somtimes some voice just doesn't fit and bad recordings many will not fit
+#you may have to play with the settings and open the files to see why
+#this provides a rough check to find similar duration or kick
+#if too many then exit
+print(len(notkw_files))
+for notkw_file in notkw_files:
+  file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params(notkw_file, silence_maximum_amplitude)
+  notkw_duration = voice_end - voice_start
+  notkw_count += 1
+
+  
+  print(notkw_file, file_maximum_amplitude, file_duration, voice_start, voice_end) #, voice_stat, voice_stats
+  if notkw_duration > 1:
+    print(notkw_file + ' is over size')
+    notkw_oversize_count += 1
+    notkw_count -= 1
+    notkw_files.remove(notkw_file)
+  if notkw_duration < 0.225:
+    print(notkw_file + ' is under size')
+    notkw_undersize_count += 1
+    notkw_count -= 1
+    notkw_files.remove(notkw_file)
+if notkw_oversize_count >= kw_count * 0.1:
+  print("Too many samples are oversize")
+  exit()
+if notkw_oversize_count >= 1:
+  print('Some KW have been ejected for being oversize')
+if notkw_undersize_count >= kw_count * 0.1:
+  print("Too many samples are undersize")
+  exit()
+if notkw_undersize_count >= 1:
+  print('Some KW have been ejected for being undersize')
+  
+print(len(notkw_files))
+
 total_kw = validation_percent
 needed_samples = total_kw * args.notkw_percent
 
@@ -277,7 +394,7 @@ print(needed_samples, cycles, len(notkw_files))
 count = 0
 while count < cycles:
   for notkw_file in notkw_files:
-    voice_mean_norm = voice_mean_norm + augment(notkw_file, count)
+    voice_mean_norm = voice_mean_norm + augment(notkw_file, count, norm=True)
     voice_mean_count += 1
   count += 1
     
@@ -346,7 +463,7 @@ if total_duration >= needed_samples:
   while file_count < needed_samples:
     for silence_file in silence_files:
       if int(sox.file_info.duration(silence_file)) > cycle_count:
-        single_silence(silence_file, cycle_count, silence_norm)
+        single_silence(silence_file, cycle_count, -1)
         file_count += 1
         if file_count > needed_samples:
           break   
@@ -356,7 +473,7 @@ else:
   cycle_count = 1
   while file_count < needed_samples:
     for silence_file in silence_files:
-      single_silence(silence_file, cycle_count, silence_norm, True)
+      single_silence(silence_file, cycle_count, -1, True)
       file_count += 1
       if file_count > needed_samples:
         break   
