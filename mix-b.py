@@ -62,7 +62,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   tfm2.build(rec_file, '/tmp/tempo.wav')
   tfm2.clear_effects()
   file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params('/tmp/tempo.wav', silence_maximum_amplitude)
-  print(file_maximum_amplitude, file_duration, voice_start, voice_end)
   non_voice = 1 - (voice_end - voice_start)
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
@@ -82,7 +81,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   tfm3.build(rec_file, '/tmp/pitch-tempo.wav')
   tfm3.clear_effects()
   file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params('/tmp/pitch-tempo.wav', silence_maximum_amplitude)
-  print(file_maximum_amplitude, file_duration, voice_start, voice_end)
   non_voice = 1 - (voice_end - voice_start)
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
@@ -123,19 +121,33 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
     else:
       os.popen('cp ' + '/tmp/cbm' + str(cbm_count) + '.wav' + ' ' + dest_cbm[cbm_count - 1])
     cbm_count += 1
+  return frg_amplitude
   
-def single_silence(rec_file, count, repeat=False):
+def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
     destfile = args.destination + "/" + os.path.splitext(os.path.basename(rec_file))[0] + '-' + str(count) + '.wav'
     tfm1 = sox.Transformer()
     if repeat == True:
       count = int(sox.file_info.duration(rec_file) * random.random())
-      if count + 1 > int(sox.file_info.duration(rec_file)):
-        count = 0
+    if count + 1 > int(sox.file_info.duration(rec_file)):
+      count = 0
     print(destfile, count)
-    tfm1.norm(-12)
+    pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
+    tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))
+    
+    tfm1.pitch(pitch)
+    tfm1.tempo(tempo)
     tfm1.trim(count, count + 1)
-    tfm1.build(rec_file, destfile) 
+    tfm1.build(rec_file, '/tmp/silence.wav') 
     tfm1.clear_effects()
+    silence_stat = tfm1.stat('/tmp/silence.wav')
+    silence_amplitude = abs(float(silence_stat['Maximum amplitude'] ))
+    if abs(silence_amplitude) == 0:
+      target_amplitude = kw_avg_amplitude
+    else:
+      target_amplitude = kw_avg_amplitude / silence_amplitude
+    tfm1.trim(0, 1)
+    tfm1.vol(target_amplitude, gain_type='amplitude')
+    tfm1.build('/tmp/silence.wav', destfile)
       
 parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--background_dir', type=str, default='_background_noise_', help='background noise directory')
@@ -214,11 +226,18 @@ cycles = math.ceil((needed_samples / 3) / len(kw_files))
 print(needed_samples, cycles, len(kw_files))
 
 count = 0
+kw_amplitude = []
+kw_count = 0
+kw_sum = 0
 while count < cycles:
   for kw_file in kw_files:
-    augment(kw_file, silence_maximum_amplitude, count, args.overfit_ratio)
+    kw_amplitude = augment(kw_file, silence_maximum_amplitude, count, args.overfit_ratio)
+    kw_count += 1
+    kw_sum = kw_sum + kw_amplitude[0] + kw_amplitude[1] + kw_amplitude[2]
   count += 1
-  
+kw_avg_amplitude = kw_sum / (kw_count * 3)
+print(kw_avg_amplitude)
+
 kw_files = glob.glob(args.destination + '/kw*.wav')
 random.shuffle(kw_files)
 
