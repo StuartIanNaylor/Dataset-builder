@@ -152,7 +152,7 @@ def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
 parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--background_dir', type=str, default='_background_noise_', help='background noise directory')
 parser.add_argument('-r', '--rec_dir', type=str, default='rec', help='recorded samples directory')
-parser.add_argument('-R', '--background_ratio', type=float, default=0.25, help='background ratio to foreground')
+parser.add_argument('-R', '--background_ratio', type=float, default=0.20, help='background ratio to foreground')
 parser.add_argument('-d', '--background_duration', type=float, default=2.5, help='background split duration')
 parser.add_argument('-p', '--pitch', type=float, default=4.0, help='pitch semitones range')
 parser.add_argument('-t', '--tempo', type=float, default=0.8, help='tempo percentage range')
@@ -168,7 +168,7 @@ parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1
 parser.add_argument('-H', '--silence_headroom', type=float, default=1.0, help='silence threshold headroom ')
 parser.add_argument('-m', '--min_samples', type=int, default=100, help='minimum resultant samples')
 parser.add_argument('-N', '--norm_silence', type=bool, default=True, help='normalise silence files')
-parser.add_argument('-o', '--overfit-ratio', type=float, default=0.75, help='reduces pitch & tempo variation')
+parser.add_argument('-o', '--overfit-ratio', type=float, default=0.20, help='reduces pitch & tempo variation')
 args = parser.parse_args()
 
 if not os.path.exists(args.destination):
