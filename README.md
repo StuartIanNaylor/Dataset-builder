@@ -195,6 +195,8 @@ https://github.com/microsoft/MS-SNSD
 
 http://www.eduardofonseca.net/FSDnoisy18k/#download
 
+http://web.cse.ohio-state.edu/pnl/corpus/HuNonspeech/Nonspeech.zip
+
 https://drive.google.com/file/d/1mV_opi70qu-mCLid7CsB4BJDoX5nfdOi/view?usp=sharing
 
 https://drive.google.com/file/d/1qmbm7yur8GfICOvyUfvBY6c7vXV8yVem/view?usp=sharing
