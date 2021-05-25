@@ -54,6 +54,8 @@ https://drive.google.com/file/d/1qmbm7yur8GfICOvyUfvBY6c7vXV8yVem/view?usp=shari
 
 https://drive.google.com/file/d/1pa58ERBdp4UijRUGEDBQjFv7jIKUROqx/view?usp=sharing
 
+https://drive.google.com/file/d/1Y8zKi9pSrvTwDSJHxJYRN3qm5_5Wq3_w/view?usp=sharing
+
 
 Finally run `python3 mix.py` again you can do a `python3 mix.py -h` if you wish to change from default parameters.
 This will mix background noises into your word samples whilst also mixing in silence at the level of record to pad out your word splits.
@@ -82,6 +84,8 @@ https://drive.google.com/file/d/1mV_opi70qu-mCLid7CsB4BJDoX5nfdOi/view?usp=shari
 https://drive.google.com/file/d/1qmbm7yur8GfICOvyUfvBY6c7vXV8yVem/view?usp=sharing
 
 https://drive.google.com/file/d/1pa58ERBdp4UijRUGEDBQjFv7jIKUROqx/view?usp=sharing
+
+https://drive.google.com/file/d/1Y8zKi9pSrvTwDSJHxJYRN3qm5_5Wq3_w/view?usp=sharing
 ```
 ppython3 mix.py --help
 usage: mix.py [-h] [-b BACKGROUND_DIR] [-r REC_DIR] [-R BACKGROUND_RATIO] [-d BACKGROUND_DURATION] [-p PITCH] [-t TEMPO]
@@ -196,6 +200,8 @@ https://drive.google.com/file/d/1mV_opi70qu-mCLid7CsB4BJDoX5nfdOi/view?usp=shari
 https://drive.google.com/file/d/1qmbm7yur8GfICOvyUfvBY6c7vXV8yVem/view?usp=sharing
 
 https://drive.google.com/file/d/1pa58ERBdp4UijRUGEDBQjFv7jIKUROqx/view?usp=sharing
+
+https://drive.google.com/file/d/1Y8zKi9pSrvTwDSJHxJYRN3qm5_5Wq3_w/view?usp=sharing
 
 Background noise is added to the silence classification using recorded volume as the start point you should use audacity to test you mics record levels and normalise to -3dB less (0.707946) and also maybe another set at half that volume again to vary your silence collection.
 
