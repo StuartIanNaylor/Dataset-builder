@@ -125,6 +125,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   
 def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
     destfile = args.destination + "/" + os.path.splitext(os.path.basename(rec_file))[0] + '-' + str(count) + '.wav'
+    destfile2 = args.destination + "/" + os.path.splitext(os.path.basename(rec_file))[0] + '-q' + str(count) + '.wav'
     tfm1 = sox.Transformer()
     if repeat == True:
       count = int(sox.file_info.duration(rec_file) * random.random())
@@ -148,6 +149,15 @@ def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
     tfm1.trim(0, 1)
     tfm1.vol(target_amplitude, gain_type='amplitude')
     tfm1.build('/tmp/silence.wav', destfile)
+    tfm1.clear_effects()
+    if abs(silence_amplitude) == 0:
+      target_amplitude = kw_avg_amplitude * args.background_ratio
+    else:
+      target_amplitude = (kw_avg_amplitude / silence_amplitude) * args.background_ratio
+    tfm1.trim(0, 1)
+    tfm1.vol(target_amplitude, gain_type='amplitude')
+    tfm1.build('/tmp/silence.wav', destfile2)
+    
       
 parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--background_dir', type=str, default='_background_noise_', help='background noise directory')
@@ -344,7 +354,7 @@ total_duration = 0
 for silence_file in silence_files:
   total_duration = total_duration + int(sox.file_info.duration(silence_file))
 
-needed_samples = math.ceil(total_kw * args.silence_percent)
+needed_samples = math.ceil((total_kw * args.silence_percent) / 2)
 print("Total duration =" + str(total_duration), needed_samples, len(silence_files))
 
 if total_duration >= needed_samples:
