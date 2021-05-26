@@ -167,8 +167,6 @@ parser.add_argument('-d', '--background_duration', type=float, default=2.5, help
 parser.add_argument('-p', '--pitch', type=float, default=4.0, help='pitch semitones range')
 parser.add_argument('-t', '--tempo', type=float, default=0.8, help='tempo percentage range')
 parser.add_argument('-D', '--destination', type=str, default='dataset', help='destination directory')
-parser.add_argument('-a', '--foreground_attenuation', type=float, default=0.4, help='foreground random attenuation range')
-parser.add_argument('-A', '--background_attenuation', type=float, default=0.4, help='background random attenuation range')
 parser.add_argument('-B', '--background_percent', type=float, default=0.8, help='Background noise percentage')
 parser.add_argument('-T', '--testing_percent', type=float, default=0.1, help='dataset testing percent')
 parser.add_argument('-v', '--validation_percent', type=float, default=0.1, help='dataset validation percentage')
@@ -177,7 +175,6 @@ parser.add_argument('-n', '--notkw_percent', type=float, default=0.1, help='data
 parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1, help='Min length of silence')
 parser.add_argument('-H', '--silence_headroom', type=float, default=1.0, help='silence threshold headroom ')
 parser.add_argument('-m', '--min_samples', type=int, default=100, help='minimum resultant samples')
-parser.add_argument('-N', '--norm_silence', type=bool, default=True, help='normalise silence files')
 parser.add_argument('-o', '--overfit-ratio', type=float, default=0.20, help='reduces pitch & tempo variation')
 args = parser.parse_args()
 
