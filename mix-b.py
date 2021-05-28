@@ -175,7 +175,7 @@ parser.add_argument('-n', '--notkw_percent', type=float, default=0.1, help='data
 parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1, help='Min length of silence')
 parser.add_argument('-H', '--silence_headroom', type=float, default=1.0, help='silence threshold headroom ')
 parser.add_argument('-m', '--min_samples', type=int, default=100, help='minimum resultant samples')
-parser.add_argument('-o', '--overfit-ratio', type=float, default=0.20, help='reduces pitch & tempo variation')
+parser.add_argument('-o', '--overfit-ratio', type=float, default=0.1, help='reduces pitch & tempo variation of KW')
 args = parser.parse_args()
 
 if not os.path.exists(args.destination):
