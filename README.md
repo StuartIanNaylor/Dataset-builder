@@ -181,6 +181,18 @@ You environment will set optimal parameters but as the dataset is a starter data
 
 A rough Background_noise example has been given conatining some random sounds you will need to collect and make your own for your own environment.
 
+http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz
+
+https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_v0.02.tar.gz
+
+http://www.google.com/url?q=http%3A%2F%2Ffluent.ai%3A2052%2Fjf8398hf30f0381738rucj3828chfdnchs.tar.gz&sa=D&sntz=1&usg=AFQjCNEANKPJHmg4ZEJmmLFdeyY8TVrRJw
+
+Single Word Target Segment from https://commonvoice.mozilla.org/en/datasets
+
+https://github.com/sonos/keyword-spotting-research-datasets
+
+https://developer.qualcomm.com/project/keyword-speech-dataset
+
 https://github.com/jim-schwoebel/download_audioset
 
 https://homepages.tuni.fi/toni.heittola/datasets.html
