@@ -176,6 +176,7 @@ parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1
 parser.add_argument('-H', '--silence_headroom', type=float, default=1.0, help='silence threshold headroom ')
 parser.add_argument('-m', '--min_samples', type=int, default=100, help='minimum resultant samples')
 parser.add_argument('-o', '--overfit-ratio', type=float, default=0.1, help='reduces pitch & tempo variation of KW')
+parser.add_argument('-k', '--keyword_qty', type=int, default=1, help='Keywords recorded')
 args = parser.parse_args()
 
 if not os.path.exists(args.destination):
@@ -184,6 +185,10 @@ else:
   print('Destination folder exists')
   exit()
   
+f = open(args.rec_dir + '/rec.text', "r")
+args.keyword_qty = int(f.read())
+f.close
+
 with open(args.destination + '/args.txt', 'w') as f:
     json.dump(args.__dict__, f, indent=2)
 
