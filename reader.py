@@ -78,6 +78,9 @@ for sentence in sentences:
   f1=open(sentence, "r")
   fl =f1.readlines()
   for x in fl:
+    for kw in keyword:
+      if x.lower() == kw.lower():
+        continue
     os.system('clear')
     output = render(x, font='huge', align='center')
     print(output)
