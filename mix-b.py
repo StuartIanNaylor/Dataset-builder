@@ -185,7 +185,7 @@ else:
   print('Destination folder exists')
   exit()
   
-f = open(args.rec_dir + '/rec.text', "r")
+f = open(args.rec_dir + '/rec.txt', "r")
 args.keyword_qty = int(f.read())
 f.close
 
@@ -221,9 +221,6 @@ if os.path.exists(args.background_dir):
 random.shuffle(background_noise_files)
 background_noise_count = len(background_noise_files)
 
-kw_files = glob.glob(args.rec_dir + '/kw*.wav')
-random.shuffle(kw_files)
-
 if args.testing_percent >= args.validation_percent:
   needed_samples = args.min_samples / args.validation_percent
 else:
@@ -234,64 +231,70 @@ if args.notkw_percent >= args.silence_percent:
 else:
   needed_samples = needed_samples / args.notkw_percent
   
-cycles = math.ceil((needed_samples / 3) / len(kw_files))
-print(needed_samples, cycles, len(kw_files))
+kw_number = 0
+while kw_number < args.keyword_qty:
+  kw_files = glob.glob(args.rec_dir + '/kw' + str(kw_number) + '*.wav')
+  random.shuffle(kw_files)
 
-count = 0
-kw_amplitude = []
-kw_count = 0
-kw_sum = 0
-while count < cycles:
-  for kw_file in kw_files:
-    kw_amplitude = augment(kw_file, silence_maximum_amplitude, count, args.overfit_ratio)
-    kw_count += 1
-    kw_sum = kw_sum + kw_amplitude[0] + kw_amplitude[1] + kw_amplitude[2]
-  count += 1
-kw_avg_amplitude = kw_sum / (kw_count * 3)
-print(kw_avg_amplitude)
+  cycles = math.ceil((needed_samples / 3) / len(kw_files))
+  print(needed_samples, cycles, len(kw_files))
 
-kw_files = glob.glob(args.destination + '/kw*.wav')
-random.shuffle(kw_files)
+  count = 0
+  kw_amplitude = []
+  kw_count = 0
+  kw_sum = 0
+  while count < cycles:
+    for kw_file in kw_files:
+      kw_amplitude = augment(kw_file, silence_maximum_amplitude, count, args.overfit_ratio)
+      kw_count += 1
+      kw_sum = kw_sum + kw_amplitude[0] + kw_amplitude[1] + kw_amplitude[2]
+    count += 1
+  kw_avg_amplitude = kw_sum / (kw_count * 3)
+  print(kw_avg_amplitude)
 
-train_percent = int(len(kw_files) * (1 - args.testing_percent - args.validation_percent))
-print('train percent', train_percent)
-train = kw_files[0 : train_percent]
+  kw_files = glob.glob(args.destination + '/kw*.wav')
+  random.shuffle(kw_files)
 
-test_percent = int(len(kw_files) * args.testing_percent) + train_percent
-print('test percent', test_percent)
-test = kw_files[train_percent + 1 : test_percent]
-print(str(train_percent + 1) + ':' +str(test_percent))
+  train_percent = int(len(kw_files) * (1 - args.testing_percent - args.validation_percent))
+  print('train percent', train_percent)
+  train = kw_files[0 : train_percent]
 
-validation_percent = int(len(kw_files) * args.validation_percent) + test_percent
-print('validation percent', validation_percent)
-validation = kw_files[test_percent + 1 : validation_percent]
-print(str(test_percent + 1) + ':' + str(validation_percent))
+  test_percent = int(len(kw_files) * args.testing_percent) + train_percent
+  print('test percent', test_percent)
+  test = kw_files[train_percent + 1 : test_percent]
+  print(str(train_percent + 1) + ':' +str(test_percent))
 
-if not os.path.exists(args.destination + '/training'):
-  os.makedirs(args.destination + '/training') 
-if not os.path.exists(args.destination + '/training/kw'):
-  os.makedirs(args.destination + '/training/kw') 
+  validation_percent = int(len(kw_files) * args.validation_percent) + test_percent
+  print('validation percent', validation_percent)
+  validation = kw_files[test_percent + 1 : validation_percent]
+  print(str(test_percent + 1) + ':' + str(validation_percent))
+
+  if not os.path.exists(args.destination + '/training'):
+    os.makedirs(args.destination + '/training') 
+  if not os.path.exists(args.destination + '/training/kw'  + str(kw_number)):
+    os.makedirs(args.destination + '/training/kw' + str(kw_number)) 
   
-for files in train:
-  os.system('mv ' + files + ' ' +  args.destination + '/training/kw/' + os.path.basename(files))
+  for files in train:
+    os.system('mv ' + files + ' ' +  args.destination + '/training/kw' + str(kw_number) + '/' + os.path.basename(files))
   
-if not os.path.exists(args.destination + '/testing'):
-  os.makedirs(args.destination + '/testing') 
-if not os.path.exists(args.destination + '/testing/kw'):
-  os.makedirs(args.destination + '/testing/kw')   
+  if not os.path.exists(args.destination + '/testing'):
+    os.makedirs(args.destination + '/testing') 
+  if not os.path.exists(args.destination + '/testing/kw' + str(kw_number)):
+    os.makedirs(args.destination + '/testing/kw' + str(kw_number))   
   
-for files in test:
-  os.system('mv ' + files + ' ' +  args.destination + '/testing/kw/' + os.path.basename(files))
+  for files in test:
+    os.system('mv ' + files + ' ' +  args.destination + '/testing/kw' + str(kw_number) + '/' + os.path.basename(files))
   
-if not os.path.exists(args.destination + '/validation'):
-  os.makedirs(args.destination + '/validation') 
-if not os.path.exists(args.destination + '/validation/kw'):
-  os.makedirs(args.destination + '/validation/kw')
+  if not os.path.exists(args.destination + '/validation'):
+    os.makedirs(args.destination + '/validation') 
+  if not os.path.exists(args.destination + '/validation/kw' + str(kw_number)):
+    os.makedirs(args.destination + '/validation/kw' + str(kw_number))
   
-for files in validation:
-  os.system('mv ' + files + ' ' +  args.destination + '/validation/kw/' + os.path.basename(files))
+  for files in validation:
+    os.system('mv ' + files + ' ' +  args.destination + '/validation/kw' + str(kw_number) + '/' + os.path.basename(files))
  
-os.system('rm ' +  args.destination + '/kw*.wav')
+  os.system('rm ' +  args.destination + '/kw*.wav')
+  kw_number += 1
 
 notkw_files = glob.glob(args.rec_dir + '/notkw*.wav')
 random.shuffle(notkw_files)
