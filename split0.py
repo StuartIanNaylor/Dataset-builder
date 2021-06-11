@@ -39,6 +39,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   dest_cbm = []
   frg_amplitude = []
   pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
+  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   tfm1 = sox.Transformer()
   tfm1.pitch(pitch)
   tfm1.build(rec_file, '/tmp/pitch.wav')
@@ -48,7 +49,8 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   non_voice = 1 - (voice_end - voice_start)
   trim_start = voice_start - (non_voice / 2)  
   if trim_start < 0:
-    trim_start = 0  
+    trim_start = 0
+  tfm1.vol(volume)
   tfm1.trim(trim_start, trim_start + 1)
   tfm1.build('/tmp/pitch.wav', '/tmp/cbm1.wav') 
   tfm1.clear_effects()
@@ -57,6 +59,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-pitch.wav')
   
   tempo = random.uniform(1 - abs((args.tempo / 4) * overfit_ratio), 1 + (abs(args.tempo / 2) * overfit_ratio))
+  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   tfm2 = sox.Transformer()
   tfm2.tempo(tempo, 's')
   tfm2.build(rec_file, '/tmp/tempo.wav')
@@ -66,6 +69,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
     trim_start = 0
+  tfm2.vol(volume)
   tfm2.trim(trim_start, trim_start + 1)
   tfm2.build('/tmp/tempo.wav', '/tmp/cbm2.wav') 
   tfm2.clear_effects()
@@ -74,7 +78,8 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-tempo.wav')
   
   pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
-  tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))  
+  tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))
+  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   tfm3 = sox.Transformer()
   tfm3.pitch(pitch)
   tfm3.tempo(tempo, 's')
@@ -85,6 +90,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
     trim_start = 0
+  tfm3.vol(volume)
   tfm3.trim(trim_start, trim_start + 1)
   tfm3.build('/tmp/pitch-tempo.wav', '/tmp/cbm3.wav')
   tfm3.clear_effects()
@@ -92,10 +98,69 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   frg_amplitude.append(float(frg_stat['Maximum amplitude']))
   dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-pitch-tempo.wav')
   
+  reverb_index = int(5.99 * random.random())
+  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+  tfm4 = sox.Transformer()
+  tfm4.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
+  tfm4.build(rec_file, '/tmp/reverb.wav')
+  tfm4.clear_effects()
+  file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params('/tmp/reverb.wav', silence_maximum_amplitude)
+  non_voice = 1 - (voice_end - voice_start)
+  trim_start = voice_start - (non_voice / 2)
+  if trim_start < 0:
+    trim_start = 0
+  tfm4.vol(volume)
+  tfm4.trim(trim_start, trim_start + 1)
+  tfm4.build('/tmp/reverb.wav', '/tmp/cbm4.wav')
+  tfm4.clear_effects()
+  frg_stat = tfm4.stat('/tmp/cbm4.wav')
+  frg_amplitude.append(float(frg_stat['Maximum amplitude']))
+  dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-reverb.wav')
+  
+  reverb_index = int(5.99 * random.random())
+  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+  pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
+  tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))  
+  tfm5 = sox.Transformer()
+  tfm5.pitch(pitch)
+  tfm5.tempo(tempo, 's')
+  tfm5.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
+  tfm5.build(rec_file, '/tmp/all.wav')
+  tfm5.clear_effects()
+  file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params('/tmp/all.wav', silence_maximum_amplitude)
+  non_voice = 1 - (voice_end - voice_start)
+  trim_start = voice_start - (non_voice / 2)
+  if trim_start < 0:
+    trim_start = 0
+  tfm5.vol(volume)
+  tfm5.trim(trim_start, trim_start + 1)
+  tfm5.build('/tmp/all.wav', '/tmp/cbm5.wav')
+  tfm5.clear_effects()
+  frg_stat = tfm5.stat('/tmp/cbm5.wav')
+  frg_amplitude.append(float(frg_stat['Maximum amplitude']))
+  dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-all.wav')
+  
+  tfm6 = sox.Transformer()
+  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+  os.popen('cp ' + rec_file + ' /tmp/orig.wav')
+  file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params('/tmp/orig.wav', silence_maximum_amplitude)
+  non_voice = 1 - (voice_end - voice_start)
+  trim_start = voice_start - (non_voice / 2)
+  if trim_start < 0:
+    trim_start = 0
+  tfm6.vol(volume)
+  tfm6.trim(trim_start, trim_start + 1)
+  tfm6.build('/tmp/orig.wav', '/tmp/cbm6.wav')
+  tfm6.clear_effects()
+  frg_stat = tfm6.stat('/tmp/cbm6.wav')
+  frg_amplitude.append(float(frg_stat['Maximum amplitude']))
+  dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-orig.wav')
+  
   cbn1 = sox.Combiner()
   cbm_count = 1
-  while cbm_count < 4:
+  while cbm_count < 7:
     if random.random() <= args.background_percent:
+      volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
       background_noise_file = background_noise_files[int(background_noise_count * random.random())][0]
       background_start = (sox.file_info.duration(background_noise_file) - 1) * random.random()
 
@@ -107,9 +172,9 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
       bkg_amplitude = float(bkg_stat['Maximum amplitude'] )
       print(frg_amplitude[cbm_count - 1], args.background_ratio, bkg_amplitude)
       if abs(bkg_amplitude) == 0:
-        target_amplitude = abs(frg_amplitude[cbm_count - 1]) * args.background_ratio
+        target_amplitude = (abs(frg_amplitude[cbm_count - 1]) * args.background_ratio ) * volume
       else:
-        target_amplitude = (abs(frg_amplitude[cbm_count - 1]) * args.background_ratio) / abs(bkg_amplitude)
+        target_amplitude = ((abs(frg_amplitude[cbm_count - 1]) * args.background_ratio) / abs(bkg_amplitude)) * volume
     
       tfm2.vol(target_amplitude, gain_type='amplitude')
       tfm2.build('/tmp/bkg-' + str(cbm_count) + '.wav', '/tmp/amp-' + str(cbm_count) + '.wav')
@@ -125,39 +190,63 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   
 def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
     destfile = args.destination + "/" + os.path.splitext(os.path.basename(rec_file))[0] + '-' + str(count) + '.wav'
-    destfile2 = args.destination + "/" + os.path.splitext(os.path.basename(rec_file))[0] + '-q' + str(count) + '.wav'
     tfm1 = sox.Transformer()
     if repeat == True:
-      count = int(sox.file_info.duration(rec_file) * random.random())
-    if count + 1 > int(sox.file_info.duration(rec_file)):
-      count = 0
-    print(destfile, count)
-    pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
-    tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))
-    
-    tfm1.pitch(pitch)
-    tfm1.tempo(tempo)
-    tfm1.trim(count, count + 1)
-    tfm1.build(rec_file, '/tmp/silence.wav') 
+      if count + 1 > int(sox.file_info.duration(rec_file)):
+        count = int((sox.file_info.duration(rec_file) -1) * random.random())
+      effect_type = int(random.random() * 6.99)
+      tfm1 = sox.Transformer()
+      if effect_type == 1:
+        pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
+        tfm1.pitch(pitch)
+        tfm1.trim(count, count + 1)
+        tfm1.build(rec_file, '/tmp/silence.wav')
+      elif effect_type == 2:
+        tempo = random.uniform(1 - abs((args.tempo / 4) * overfit_ratio), 1 + (abs(args.tempo / 2) * overfit_ratio))
+        tfm1.tempo(pitch)
+        tfm1.trim(count, count + 1)
+        tfm1.build(rec_file, '/tmp/silence.wav')
+      elif effect_type == 3:
+        pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
+        tempo = random.uniform(1 - abs((args.tempo / 4) * overfit_ratio), 1 + (abs(args.tempo / 2) * overfit_ratio))
+        tfm1.pitch(pitch)
+        tfm1.tempo(pitch)
+        tfm1.trim(count, count + 1)
+        tfm1.build(rec_file, '/tmp/silence.wav')
+      elif effect_type == 4:        
+        reverb_index = int(5.99 * random.random())
+        tfm1.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
+        tfm1.trim(count, count + 1)
+        tfm1.build(rec_file, '/tmp/silence.wav')
+      elif effect_type == 5:
+        reverb_index = int(5.99 * random.random())
+        pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
+        tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))  
+        tfm1.pitch(pitch)
+        tfm1.tempo(tempo, 's')
+        tfm1.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
+        tfm1.trim(count, count + 1)
+        tfm1.build(rec_file, '/tmp/silence.wav')
+      elif effect_type == 6:
+        tfm1.trim(count, count + 1)
+        tfm1.build(rec_file, '/tmp/silence.wav')
+    else:
+        tfm1.trim(count, count + 1)
+        tfm1.build(rec_file, '/tmp/silence.wav')
     tfm1.clear_effects()
-    silence_stat = tfm1.stat('/tmp/silence.wav')
+      
+    print(destfile, count)
+    volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+    silence_stat = tfm1.stat(rec_file)
     silence_amplitude = abs(float(silence_stat['Maximum amplitude'] ))
     if abs(silence_amplitude) == 0:
-      target_amplitude = kw_avg_amplitude
+      target_amplitude = (kw_avg_amplitude * args.background_ratio) * volume
     else:
-      target_amplitude = kw_avg_amplitude / silence_amplitude
+      target_amplitude = ((kw_avg_amplitude / silence_amplitude) * args.background_ratio) * volume
     tfm1.trim(0, 1)
     tfm1.vol(target_amplitude, gain_type='amplitude')
     tfm1.build('/tmp/silence.wav', destfile)
     tfm1.clear_effects()
-    if abs(silence_amplitude) == 0:
-      target_amplitude = kw_avg_amplitude * args.background_ratio
-    else:
-      target_amplitude = (kw_avg_amplitude / silence_amplitude) * args.background_ratio
-    tfm1.trim(0, 1)
-    tfm1.vol(target_amplitude, gain_type='amplitude')
-    tfm1.build('/tmp/silence.wav', destfile2)
-    
       
 parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--background_dir', type=str, default='_background_noise_', help='background noise directory')
@@ -175,8 +264,10 @@ parser.add_argument('-n', '--notkw_percent', type=float, default=0.1, help='data
 parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1, help='Min length of silence')
 parser.add_argument('-H', '--silence_headroom', type=float, default=1.0, help='silence threshold headroom ')
 parser.add_argument('-m', '--min_samples', type=int, default=100, help='minimum resultant samples')
-parser.add_argument('-o', '--overfit-ratio', type=float, default=0.1, help='reduces pitch & tempo variation of KW')
+parser.add_argument('-o', '--overfit_ratio', type=float, default=0.1, help='reduces pitch & tempo variation of KW')
 parser.add_argument('-k', '--keyword_qty', type=int, default=1, help='Keywords recorded')
+parser.add_argument('-a', '--amplitude_foreground', type=float, default=0.1, help='+- foreground amplitude variance')
+parser.add_argument('-A', '--amplitude_background', type=float, default=0.1, help='+- backgroundground amplitude variance')
 args = parser.parse_args()
 
 if not os.path.exists(args.destination):
@@ -221,22 +312,31 @@ if os.path.exists(args.background_dir):
 random.shuffle(background_noise_files)
 background_noise_count = len(background_noise_files)
 
+reverb_values = []
+reverb_values.append([16, 8, 80, 0, -6, 100])
+reverb_values.append([23, 9, 65, 25, -3, 100])
+reverb_values.append([30, 10, 50, 50, -1, 100])
+reverb_values.append([52, 10, 45, 50, -1, 85])
+reverb_values.append([75, 10, 40, 50, -1, 70])
+reverb_values.append([85, 10, 40, 50, -1, 0])
+
+
 if args.testing_percent >= args.validation_percent:
-  needed_samples = args.min_samples / args.validation_percent
+  needed_samples = math.ceil(args.min_samples / args.validation_percent)
 else:
-  needed_samples = args.min_samples / args.testing_percent
+  needed_samples = math.ceil(args.min_samples / args.testing_percent)
 
 if args.notkw_percent >= args.silence_percent:
-  needed_samples = needed_samples / args.silence_percent
+  needed_samples = math.ceil(needed_samples / args.silence_percent)
 else:
-  needed_samples = needed_samples / args.notkw_percent
+  needed_samples = math.ceil(needed_samples / args.notkw_percent)
   
 kw_number = 0
 while kw_number < args.keyword_qty:
   kw_files = glob.glob(args.rec_dir + '/kw' + str(kw_number) + '*.wav')
   random.shuffle(kw_files)
 
-  cycles = math.ceil((needed_samples / 3) / len(kw_files))
+  cycles = math.ceil((needed_samples / 7) / len(kw_files))
   print(needed_samples, cycles, len(kw_files))
 
   count = 0
@@ -247,27 +347,27 @@ while kw_number < args.keyword_qty:
     for kw_file in kw_files:
       kw_amplitude = augment(kw_file, silence_maximum_amplitude, count, args.overfit_ratio)
       kw_count += 1
-      kw_sum = kw_sum + kw_amplitude[0] + kw_amplitude[1] + kw_amplitude[2]
+      kw_sum = kw_sum + kw_amplitude[0] + kw_amplitude[1] + kw_amplitude[2] + kw_amplitude[3] + kw_amplitude[4] + kw_amplitude[5]  
     count += 1
-  kw_avg_amplitude = kw_sum / (kw_count * 3)
+  kw_avg_amplitude = kw_sum / (kw_count * 6)
   print(kw_avg_amplitude)
 
   kw_files = glob.glob(args.destination + '/kw*.wav')
   random.shuffle(kw_files)
 
-  train_percent = int(len(kw_files) * (1 - args.testing_percent - args.validation_percent))
+  train_percent = math.ceil(len(kw_files) * (1 - args.testing_percent - args.validation_percent))
   print('train percent', train_percent)
-  train = kw_files[0 : train_percent]
+  train = kw_files[0 : train_percent - 1]
 
-  test_percent = int(len(kw_files) * args.testing_percent) + train_percent
+  test_percent = math.ceil(len(kw_files) * args.testing_percent) + train_percent
   print('test percent', test_percent)
-  test = kw_files[train_percent + 1 : test_percent]
-  print(str(train_percent + 1) + ':' +str(test_percent))
+  test = kw_files[train_percent : test_percent]
+  print(str(train_percent) + ':' + str(test_percent))
 
-  validation_percent = int(len(kw_files) * args.validation_percent) + test_percent
+  validation_percent = math.ceil(len(kw_files) * args.validation_percent) + test_percent
   print('validation percent', validation_percent)
-  validation = kw_files[test_percent + 1 : validation_percent]
-  print(str(test_percent + 1) + ':' + str(validation_percent))
+  validation = kw_files[test_percent + 1 : validation_percent + 1]
+  print(str(test_percent + 1) + ':' + str(validation_percent + 1))
 
   if not os.path.exists(args.destination + '/training'):
     os.makedirs(args.destination + '/training') 
@@ -299,11 +399,10 @@ while kw_number < args.keyword_qty:
 notkw_files = glob.glob(args.rec_dir + '/notkw*.wav')
 random.shuffle(notkw_files)
 
-total_kw = validation_percent
-needed_samples = total_kw * args.notkw_percent
+notkw_needed_samples = math.ceil(needed_samples * args.notkw_percent)
 
-cycles = math.ceil((needed_samples / 3) / len(notkw_files))
-print(needed_samples, cycles, len(notkw_files))
+cycles = math.ceil((notkw_needed_samples / 6) / len(notkw_files))
+print(notkw_needed_samples, cycles, len(notkw_files))
 
 count = 0
 while count < cycles:
@@ -314,19 +413,19 @@ while count < cycles:
 notkw_files = glob.glob(args.destination + '/notkw*.wav')
 random.shuffle(notkw_files)
 
-train_percent = int((total_kw * args.notkw_percent) * (1 - args.testing_percent - args.validation_percent))
+train_percent = math.ceil((needed_samples * args.notkw_percent) * (1 - args.testing_percent - args.validation_percent))
 print('train percent', train_percent)
-train = notkw_files[0 : train_percent]
+train = notkw_files[0 : train_percent - 1]
 
-test_percent = int((total_kw * args.notkw_percent) * args.testing_percent) + train_percent
+test_percent = math.ceil((needed_samples * args.notkw_percent) * args.testing_percent) + train_percent
 print('test percent', test_percent)
-test = notkw_files[train_percent + 1 : test_percent]
-print(str(train_percent + 1) + ':' + str(test_percent))
+test = notkw_files[train_percent : test_percent]
+print(str(train_percent) + ':' + str(test_percent))
 
-validation_percent = int((total_kw * args.notkw_percent) * args.validation_percent) + test_percent
+validation_percent = math.ceil((needed_samples * args.notkw_percent) * args.validation_percent) + test_percent
 print('validation percent', validation_percent)
-validation = notkw_files[test_percent + 1 : validation_percent]
-print(str(test_percent + 1) + ':' + str(validation_percent))
+validation = notkw_files[test_percent + 1 : validation_percent + 1]
+print(str(test_percent + 1) + ':' + str(validation_percent + 1))
 
 if not os.path.exists(args.destination + '/training/notkw'):
   os.makedirs(args.destination + '/training/notkw') 
@@ -359,48 +458,49 @@ total_duration = 0
 for silence_file in silence_files:
   total_duration = total_duration + int(sox.file_info.duration(silence_file))
 
-needed_samples = math.ceil((total_kw * args.silence_percent) / 2)
-print("Total duration =" + str(total_duration), needed_samples, len(silence_files))
+#needed_samples = math.ceil((total_kw * args.silence_percent) / 2)
+silence_needed_samples = math.ceil(needed_samples * args.silence_percent)
+print("Total duration =" + str(total_duration), silence_needed_samples, len(silence_files))
 
-if total_duration >= needed_samples:
+if total_duration >= silence_needed_samples:
 #if we have enough duration then they will be split and added in proportion to length
   file_count = 0
   cycle_count = 1
-  while file_count < needed_samples:
+  while file_count < silence_needed_samples:
     for silence_file in silence_files:
-      if int(sox.file_info.duration(silence_file)) > cycle_count:
-        single_silence(silence_file, cycle_count, False)
+      if int(sox.file_info.duration(silence_file)) > cycle_count + 1:
+        single_silence(silence_file, cycle_count, False, args.overfit_ratio)
         file_count += 1
-        if file_count > needed_samples:
+        if file_count > silence_needed_samples:
           break   
     cycle_count += 1
 else:
   file_count = 0
   cycle_count = 1
-  while file_count < needed_samples:
+  while file_count < silence_needed_samples:
     for silence_file in silence_files:
-      single_silence(silence_file, cycle_count, True)
+      single_silence(silence_file, cycle_count, True, args.overfit_ratio)
       file_count += 1
-      if file_count > needed_samples:
+      if file_count > silence_needed_samples:
         break   
     cycle_count += 1
     
 silence_files = glob.glob(args.destination + '/*.wav')
 random.shuffle(silence_files)
 
-train_percent = int((total_kw * args.silence_percent) * (1 - args.testing_percent - args.validation_percent))
+train_percent = math.ceil((needed_samples * args.silence_percent) * (1 - args.testing_percent - args.validation_percent))
 print('train percent', train_percent)
-train = silence_files[0 : train_percent]
+train = silence_files[0 : train_percent - 1]
 
-test_percent = int((total_kw * args.silence_percent) * args.testing_percent) + train_percent
+test_percent = math.ceil((needed_samples * args.silence_percent) * args.testing_percent) + train_percent
 print('test percent', test_percent)
-test = silence_files[train_percent + 1 : test_percent]
-print(str(train_percent + 1) + ':' + str(test_percent))
+test = silence_files[train_percent : test_percent]
+print(str(train_percent) + ':' + str(test_percent))
 
-validation_percent = int((total_kw * args.silence_percent) * args.validation_percent) + test_percent
+validation_percent = math.ceil((needed_samples * args.silence_percent) * args.validation_percent) + test_percent
 print('validation percent', validation_percent)
-validation = silence_files[test_percent + 1 : validation_percent]
-print(str(test_percent + 1) + ':' + str(validation_percent))
+validation = silence_files[test_percent + 1 : validation_percent + 1]
+print(str(test_percent + 1) + ':' + str(validation_percent + 1))
  
 if not os.path.exists(args.destination + '/training/silence'):
   os.makedirs(args.destination + '/training/silence') 
