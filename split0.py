@@ -94,7 +94,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   
   reverb_index = int(9.99 * random.random())
   tfm4 = sox.Transformer()
-  tfm4.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
+  tfm4.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2] * overfit_ratio, high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
   tfm4.build(rec_file, '/tmp/reverb.wav')
   tfm4.clear_effects()
   file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params('/tmp/reverb.wav', silence_maximum_amplitude)
@@ -115,7 +115,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   tfm5 = sox.Transformer()
   tfm5.pitch(pitch)
   tfm5.tempo(tempo, 's')
-  tfm5.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
+  tfm5.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2] * overfit_ratio, high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
   tfm5.build(rec_file, '/tmp/all.wav')
   tfm5.clear_effects()
   file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params('/tmp/all.wav', silence_maximum_amplitude)
@@ -204,7 +204,7 @@ def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
         tfm1.build(rec_file, '/tmp/silence.wav')
       elif effect_type == 4:        
         reverb_index = int(9.99 * random.random())
-        tfm1.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
+        tfm1.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2] * overfit_ratio, high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
         tfm1.trim(count, count + 1)
         tfm1.build(rec_file, '/tmp/silence.wav')
       elif effect_type == 5:
@@ -213,7 +213,7 @@ def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
         tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))  
         tfm1.pitch(pitch)
         tfm1.tempo(tempo, 's')
-        tfm1.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
+        tfm1.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2] * overfit_ratio, high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
         tfm1.trim(count, count + 1)
         tfm1.build(rec_file, '/tmp/silence.wav')
       elif effect_type == 6:
@@ -225,7 +225,7 @@ def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
     tfm1.clear_effects()
       
     print(destfile, count)
-    volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+    volume = random.uniform(1 - (args.amplitude_background * overfit_ratio), 1 + (args.amplitude_background * overfit_ratio))
     silence_stat = tfm1.stat(rec_file)
     silence_amplitude = abs(float(silence_stat['Maximum amplitude'] ))
     if abs(silence_amplitude) == 0:
@@ -240,7 +240,7 @@ def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
 parser = argparse.ArgumentParser()
 parser.add_argument('-b', '--background_dir', type=str, default='_background_noise_', help='background noise directory')
 parser.add_argument('-r', '--rec_dir', type=str, default='rec', help='recorded samples directory')
-parser.add_argument('-R', '--background_ratio', type=float, default=0.20, help='background ratio to foreground')
+parser.add_argument('-R', '--background_ratio', type=float, default=0.30, help='background ratio to foreground')
 parser.add_argument('-d', '--background_duration', type=float, default=2.5, help='background split duration')
 parser.add_argument('-p', '--pitch', type=float, default=4.0, help='pitch semitones range')
 parser.add_argument('-t', '--tempo', type=float, default=0.8, help='tempo percentage range')
@@ -253,7 +253,7 @@ parser.add_argument('-n', '--notkw_percent', type=float, default=0.1, help='data
 parser.add_argument('-s', '--file_min_silence_duration', type=float, default=0.1, help='Min length of silence')
 parser.add_argument('-H', '--silence_headroom', type=float, default=1.0, help='silence threshold headroom ')
 parser.add_argument('-m', '--min_samples', type=int, default=100, help='minimum resultant samples')
-parser.add_argument('-o', '--overfit_ratio', type=float, default=0.1, help='reduces pitch & tempo variation of KW')
+parser.add_argument('-o', '--overfit_ratio', type=float, default=0.25, help='reduces pitch & tempo variation of KW')
 parser.add_argument('-k', '--keyword_qty', type=int, default=1, help='Keywords recorded')
 parser.add_argument('-a', '--amplitude_foreground', type=float, default=0.1, help='+- foreground amplitude variance')
 parser.add_argument('-A', '--amplitude_background', type=float, default=0.1, help='+- backgroundground amplitude variance')
