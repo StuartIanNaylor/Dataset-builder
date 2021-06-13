@@ -57,7 +57,8 @@ https://drive.google.com/file/d/1pa58ERBdp4UijRUGEDBQjFv7jIKUROqx/view?usp=shari
 https://drive.google.com/file/d/1Y8zKi9pSrvTwDSJHxJYRN3qm5_5Wq3_w/view?usp=sharing
 
 
-Finally run `python3 mix.py` again you can do a `python3 mix.py -h` if you wish to change from default parameters.
+Finally run `python3 split0.py` again you can do a `python3 split0.py -h` if you wish to change from default parameters.
+Split0 refers to the premade directory structure for Google-kws split1.py will just create KW & !KW and use the G-KWS methods.
 This will mix background noises into your word samples whilst also mixing in silence at the level of record to pad out your word splits.
 Background noise is a random range based on the amplitude of the word sample where 1.0 means if random.random() does produce a 1 then 
 background noise and word volume will be the same the default is 0.5
@@ -87,11 +88,11 @@ https://drive.google.com/file/d/1pa58ERBdp4UijRUGEDBQjFv7jIKUROqx/view?usp=shari
 
 https://drive.google.com/file/d/1Y8zKi9pSrvTwDSJHxJYRN3qm5_5Wq3_w/view?usp=sharing
 ```
-ppython3 mix.py --help
-usage: mix.py [-h] [-b BACKGROUND_DIR] [-r REC_DIR] [-R BACKGROUND_RATIO] [-d BACKGROUND_DURATION] [-p PITCH] [-t TEMPO]
-              [-D DESTINATION] [-a FOREGROUND_ATTENUATION] [-A BACKGROUND_ATTENUATION] [-B BACKGROUND_PERCENT]
-              [-T TESTING_PERCENT] [-v VALIDATION_PERCENT] [-S SILENCE_PERCENT] [-n NOTKW_PERCENT]
-              [-s FILE_MIN_SILENCE_DURATION] [-H SILENCE_HEADROOM] [-m MIN_SAMPLES] [-N NORM_SILENCE]
+split0.py -h
+usage: split0.py [-h] [-b BACKGROUND_DIR] [-r REC_DIR] [-R BACKGROUND_RATIO] [-d BACKGROUND_DURATION] [-p PITCH] [-t TEMPO] [-D DESTINATION]
+                 [-B BACKGROUND_PERCENT] [-T TESTING_PERCENT] [-v VALIDATION_PERCENT] [-S SILENCE_PERCENT] [-n NOTKW_PERCENT]
+                 [-s FILE_MIN_SILENCE_DURATION] [-H SILENCE_HEADROOM] [-m MIN_SAMPLES] [-o OVERFIT_RATIO] [-k KEYWORD_QTY] [-a AMPLITUDE_FOREGROUND]
+                 [-A AMPLITUDE_BACKGROUND]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -109,10 +110,6 @@ optional arguments:
                         tempo percentage range
   -D DESTINATION, --destination DESTINATION
                         destination directory
-  -a FOREGROUND_ATTENUATION, --foreground_attenuation FOREGROUND_ATTENUATION
-                        foreground random attenuation range
-  -A BACKGROUND_ATTENUATION, --background_attenuation BACKGROUND_ATTENUATION
-                        background random attenuation range
   -B BACKGROUND_PERCENT, --background_percent BACKGROUND_PERCENT
                         Background noise percentage
   -T TESTING_PERCENT, --testing_percent TESTING_PERCENT
@@ -129,16 +126,21 @@ optional arguments:
                         silence threshold headroom
   -m MIN_SAMPLES, --min_samples MIN_SAMPLES
                         minimum resultant samples
-  -N NORM_SILENCE, --norm_silence NORM_SILENCE
-                        normalise silence files
-
+  -o OVERFIT_RATIO, --overfit_ratio OVERFIT_RATIO
+                        reduces pitch & tempo variation of KW
+  -k KEYWORD_QTY, --keyword_qty KEYWORD_QTY
+                        Keywords recorded
+  -a AMPLITUDE_FOREGROUND, --amplitude_foreground AMPLITUDE_FOREGROUND
+                        +- foreground amplitude variance
+  -A AMPLITUDE_BACKGROUND, --amplitude_background AMPLITUDE_BACKGROUND
+                        +- backgroundground amplitude variance
 ```
 
 Probably the important parameter is `--background_ratio` this sets the is ratio of the max_amplitude of background_noise to the kw & !kw voiced samples.
 It is amplitude and not RMS so percieved loudness can seem different and is a set value.
-This set the background_noise initial level and then a range of attenuation is randomly applied `--background_attenuation`
+This set the background_noise initial level and then a range of attenuation is randomly applied `--AMPLITUDE_BACKGROUND`
 This sets the final ratio between background noise and kw & !kw samples.
-`--foreground_attenuation` is the final volume of the overall sample and both attenuations are ranges from the max_ampltude=1.
+`--AMPLITUDE_FOREGROUND` is the final volume of the overall sample and both attenuations are ranges from the max_ampltude=1.
 
 The pitch is pitch changes in semitones and tempo is a non pitch changing duration modifier both allow variance to cope with room, mic proximity & Doppler effect.
 A certain amount of samples are added without background noise as `--background_percent` default = 80% leaves 20% without background_noise.
