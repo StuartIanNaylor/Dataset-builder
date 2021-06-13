@@ -91,7 +91,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   tfm3.clear_effects()
 
   
-  reverb_index = 0 #int(5.99 * random.random())
+  reverb_index = int(9.99 * random.random())
   volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   tfm4 = sox.Transformer()
   tfm4.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
@@ -107,7 +107,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   tfm4.build('/tmp/reverb.wav', args.destination + '/' + dest_file + str(cycle) + '-reverb.wav')
   tfm4.clear_effects()
   
-  reverb_index = 0 #int(5.99 * random.random())
+  reverb_index = int(9.99 * random.random())
   volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
   tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))  
@@ -189,10 +189,14 @@ silence_maximum_amplitude = float(stat['Maximum amplitude'])
 
 reverb_values = []
 reverb_values.append([16, 8, 80, 0, -6, 100])
+reverb_values.append([20, 8, 80, 0, -4, 100])
 reverb_values.append([23, 9, 65, 25, -3, 100])
+reverb_values.append([27, 9, 65, 25, -2, 100])
 reverb_values.append([30, 10, 50, 50, -1, 100])
+reverb_values.append([40, 10, 50, 50, -1, 100])
 reverb_values.append([52, 10, 45, 50, -1, 85])
-reverb_values.append([75, 10, 40, 50, -1, 70])
+reverb_values.append([60, 10, 45, 50, -1, 80])
+reverb_values.append([75, 10, 40, 50, -1, 60])
 reverb_values.append([85, 10, 40, 50, -1, 0])
 
 

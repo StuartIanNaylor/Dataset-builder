@@ -39,7 +39,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   dest_cbm = []
   frg_amplitude = []
   pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
-  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   tfm1 = sox.Transformer()
   tfm1.pitch(pitch)
   tfm1.build(rec_file, '/tmp/pitch.wav')
@@ -50,7 +49,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   trim_start = voice_start - (non_voice / 2)  
   if trim_start < 0:
     trim_start = 0
-  tfm1.vol(volume)
   tfm1.trim(trim_start, trim_start + 1)
   tfm1.build('/tmp/pitch.wav', '/tmp/cbm1.wav') 
   tfm1.clear_effects()
@@ -59,7 +57,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-pitch.wav')
   
   tempo = random.uniform(1 - abs((args.tempo / 4) * overfit_ratio), 1 + (abs(args.tempo / 2) * overfit_ratio))
-  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   tfm2 = sox.Transformer()
   tfm2.tempo(tempo, 's')
   tfm2.build(rec_file, '/tmp/tempo.wav')
@@ -69,7 +66,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
     trim_start = 0
-  tfm2.vol(volume)
   tfm2.trim(trim_start, trim_start + 1)
   tfm2.build('/tmp/tempo.wav', '/tmp/cbm2.wav') 
   tfm2.clear_effects()
@@ -79,7 +75,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   
   pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
   tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))
-  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   tfm3 = sox.Transformer()
   tfm3.pitch(pitch)
   tfm3.tempo(tempo, 's')
@@ -90,7 +85,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
     trim_start = 0
-  tfm3.vol(volume)
   tfm3.trim(trim_start, trim_start + 1)
   tfm3.build('/tmp/pitch-tempo.wav', '/tmp/cbm3.wav')
   tfm3.clear_effects()
@@ -98,8 +92,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   frg_amplitude.append(float(frg_stat['Maximum amplitude']))
   dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-pitch-tempo.wav')
   
-  reverb_index = int(5.99 * random.random())
-  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+  reverb_index = int(9.99 * random.random())
   tfm4 = sox.Transformer()
   tfm4.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
   tfm4.build(rec_file, '/tmp/reverb.wav')
@@ -109,7 +102,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
     trim_start = 0
-  tfm4.vol(volume)
   tfm4.trim(trim_start, trim_start + 1)
   tfm4.build('/tmp/reverb.wav', '/tmp/cbm4.wav')
   tfm4.clear_effects()
@@ -117,8 +109,7 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   frg_amplitude.append(float(frg_stat['Maximum amplitude']))
   dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-reverb.wav')
   
-  reverb_index = int(5.99 * random.random())
-  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+  reverb_index = int(9.99 * random.random())
   pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
   tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))  
   tfm5 = sox.Transformer()
@@ -132,7 +123,6 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
     trim_start = 0
-  tfm5.vol(volume)
   tfm5.trim(trim_start, trim_start + 1)
   tfm5.build('/tmp/all.wav', '/tmp/cbm5.wav')
   tfm5.clear_effects()
@@ -141,14 +131,12 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   dest_cbm.append(args.destination + '/' + dest_file + str(cycle) + '-all.wav')
   
   tfm6 = sox.Transformer()
-  volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
   os.popen('cp ' + rec_file + ' /tmp/orig.wav')
   file_maximum_amplitude, file_duration, voice_start, voice_end, voice_stat, voice_stats = get_voice_params('/tmp/orig.wav', silence_maximum_amplitude)
   non_voice = 1 - (voice_end - voice_start)
   trim_start = voice_start - (non_voice / 2)
   if trim_start < 0:
     trim_start = 0
-  tfm6.vol(volume)
   tfm6.trim(trim_start, trim_start + 1)
   tfm6.build('/tmp/orig.wav', '/tmp/cbm6.wav')
   tfm6.clear_effects()
@@ -160,7 +148,8 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   cbm_count = 1
   while cbm_count < 7:
     if random.random() <= args.background_percent:
-      volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+      frg_volume = random.uniform(1 - (args.amplitude_foreground * overfit_ratio), 1 + (args.amplitude_foreground * overfit_ratio))
+      bkg_volume = random.uniform(1 - (args.amplitude_background * overfit_ratio), 1 + (args.amplitude_background * overfit_ratio))
       background_noise_file = background_noise_files[int(background_noise_count * random.random())][0]
       background_start = (sox.file_info.duration(background_noise_file) - 1) * random.random()
 
@@ -170,18 +159,18 @@ def augment(rec_file, silence_maximum_amplitude, cycle, overfit_ratio=1):
   
       bkg_stat = tfm1.stat('/tmp/bkg-' + str(cbm_count) + '.wav')
       bkg_amplitude = float(bkg_stat['Maximum amplitude'] )
-      print(frg_amplitude[cbm_count - 1], args.background_ratio, bkg_amplitude)
+      
       if abs(bkg_amplitude) == 0:
-        target_amplitude = (abs(frg_amplitude[cbm_count - 1]) * args.background_ratio ) * volume
+        target_amplitude = (abs(frg_amplitude[cbm_count - 1]) * args.background_ratio )
       else:
-        target_amplitude = ((abs(frg_amplitude[cbm_count - 1]) * args.background_ratio) / abs(bkg_amplitude)) * volume
+        target_amplitude = ((abs(frg_amplitude[cbm_count - 1]) * args.background_ratio) / abs(bkg_amplitude))
     
       tfm2.vol(target_amplitude, gain_type='amplitude')
       tfm2.build('/tmp/bkg-' + str(cbm_count) + '.wav', '/tmp/amp-' + str(cbm_count) + '.wav')
       tfm2.clear_effects()
     
       cbn1.set_input_format(file_type=['wav', 'wav'])
-      cbn1.build(['/tmp/cbm' + str(cbm_count) + '.wav', '/tmp/amp-' + str(cbm_count) + '.wav'], dest_cbm[cbm_count - 1], 'mix')
+      cbn1.build(['/tmp/cbm' + str(cbm_count) + '.wav', '/tmp/amp-' + str(cbm_count) + '.wav'], dest_cbm[cbm_count - 1], 'mix', input_volumes=[frg_volume, bkg_volume])
       cbn1.clear_effects()
     else:
       os.popen('cp ' + '/tmp/cbm' + str(cbm_count) + '.wav' + ' ' + dest_cbm[cbm_count - 1])
@@ -214,12 +203,12 @@ def single_silence(rec_file, count, repeat=False, overfit_ratio=1):
         tfm1.trim(count, count + 1)
         tfm1.build(rec_file, '/tmp/silence.wav')
       elif effect_type == 4:        
-        reverb_index = int(5.99 * random.random())
+        reverb_index = int(9.99 * random.random())
         tfm1.reverb(room_scale = reverb_values[reverb_index][0], pre_delay = reverb_values[reverb_index][1], reverberance = reverb_values[reverb_index][2], high_freq_damping = reverb_values[reverb_index][3], wet_gain  = reverb_values[reverb_index][4], stereo_depth = reverb_values[reverb_index][5])
         tfm1.trim(count, count + 1)
         tfm1.build(rec_file, '/tmp/silence.wav')
       elif effect_type == 5:
-        reverb_index = int(5.99 * random.random())
+        reverb_index = int(9.99 * random.random())
         pitch = random.uniform(abs((args.pitch / 2) * overfit_ratio) * -1, abs(args.pitch / 2) * overfit_ratio)
         tempo = random.uniform(1 - abs((args.tempo / 4)  * overfit_ratio), 1 + abs((args.tempo / 2) * overfit_ratio))  
         tfm1.pitch(pitch)
@@ -314,10 +303,14 @@ background_noise_count = len(background_noise_files)
 
 reverb_values = []
 reverb_values.append([16, 8, 80, 0, -6, 100])
+reverb_values.append([20, 8, 80, 0, -4, 100])
 reverb_values.append([23, 9, 65, 25, -3, 100])
+reverb_values.append([27, 9, 65, 25, -2, 100])
 reverb_values.append([30, 10, 50, 50, -1, 100])
+reverb_values.append([40, 10, 50, 50, -1, 100])
 reverb_values.append([52, 10, 45, 50, -1, 85])
-reverb_values.append([75, 10, 40, 50, -1, 70])
+reverb_values.append([60, 10, 45, 50, -1, 80])
+reverb_values.append([75, 10, 40, 50, -1, 60])
 reverb_values.append([85, 10, 40, 50, -1, 0])
 
 
